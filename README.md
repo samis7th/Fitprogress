@@ -46,7 +46,7 @@
 
 ## 🎯 Visão Geral
 
-FitProgress AI é um dashboard moderno de academia com autenticação via Supabase, backend em FastAPI e frontend em React. O sistema permite que o usuário:
+FitProgress é um dashboard moderno de academia com autenticação via Supabase, backend em FastAPI e frontend em React. O sistema permite que o usuário:
 
 - Faça **login e cadastro** via Supabase Auth com renovação automática de sessão
 - Cadastre e acompanhe **treinos planejados** por dia da semana
@@ -434,6 +434,6 @@ __pycache__/
 
 <div align="center">
 
-**FitProgress AI** · Desenvolvido para portfólio e estudos
+**FitProgress** · Desenvolvido para portfólio e estudos
 
 </div>

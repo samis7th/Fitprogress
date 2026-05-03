@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
 
+import AuthShell from "../components/AuthShell.jsx";
 import Button from "../components/Button.jsx";
 import Input from "../components/Input.jsx";
 import { isAuthenticated, login } from "../services/auth.js";
@@ -32,49 +33,41 @@ export default function Login() {
   }
 
   return (
-    <main className="app-bg flex min-h-screen items-center justify-center px-4">
-      <form
-        onSubmit={handleSubmit}
-        className="app-surface w-full max-w-sm rounded-2xl border p-6"
-      >
-        <h1 className="app-text text-center text-2xl font-semibold tracking-tight">FitProgress AI</h1>
-
-        <div className="mt-8 space-y-4">
-          <Input
-            label="Email"
-            type="email"
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            placeholder="seu@email.com"
-            required
-          />
-          <Input
-            label="Senha"
-            type="password"
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            placeholder="Sua senha"
-            required
-          />
-        </div>
-
-        {error && (
-          <div className="mt-4 rounded-lg border border-red-500/20 bg-red-500/10 px-3 py-2 text-sm text-red-200">
-            {error}
-          </div>
-        )}
-
-        <Button type="submit" className="mt-6 w-full" disabled={loading}>
+    <AuthShell
+      title="Acesse sua conta"
+      subtitle="Entre para acompanhar seus treinos, metas e evolução em um só lugar."
+      error={error}
+      onSubmit={handleSubmit}
+      submit={
+        <Button type="submit" className="w-full rounded-xl py-3" disabled={loading}>
           {loading ? "Entrando..." : "Entrar"}
         </Button>
-
+      }
+      footer={
         <Link
           to="/register"
-          className="app-muted mt-5 block text-center text-sm transition hover:text-emerald-500"
+          className="font-semibold text-emerald-400 transition hover:text-emerald-300"
         >
-          Criar conta
+          Criar nova conta
         </Link>
-      </form>
-    </main>
+      }
+    >
+      <Input
+        label="Email"
+        type="email"
+        value={email}
+        onChange={(event) => setEmail(event.target.value)}
+        placeholder="seu@email.com"
+        required
+      />
+      <Input
+        label="Senha"
+        type="password"
+        value={password}
+        onChange={(event) => setPassword(event.target.value)}
+        placeholder="Sua senha"
+        required
+      />
+    </AuthShell>
   );
 }

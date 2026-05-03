@@ -15,7 +15,7 @@ def get_cors_origins() -> list[str]:
 
 
 app = FastAPI(
-    title="FitProgress AI API",
+    title="FitProgress API",
     description="Backend para dashboard de academia com FastAPI e Supabase.",
     version="1.0.0",
 )
@@ -41,5 +41,5 @@ app.include_router(semana.router)
 async def health_check() -> dict[str, str]:
     return {
         "status": "ok",
-        "message": "FitProgress AI API online",
+        "message": "FitProgress API online",
     }

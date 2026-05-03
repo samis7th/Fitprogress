@@ -26,8 +26,8 @@ Depois saia do SSH e entre novamente.
 Clone seu repositório na EC2:
 
 ```bash
-git clone URL_DO_SEU_REPOSITORIO fitprogress-ai
-cd fitprogress-ai
+git clone URL_DO_SEU_REPOSITORIO fitprogress
+cd fitprogress
 ```
 
 Ou envie a pasta do projeto por SCP.

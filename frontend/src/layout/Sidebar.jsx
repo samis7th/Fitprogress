@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { NavLink } from "react-router-dom";
 
+import BrandLogo from "../components/BrandLogo.jsx";
 import { getCurrentUser, logout } from "../services/auth.js";
 
 function Icon({ children }) {
@@ -134,8 +135,13 @@ function SidebarContent({ onNavigate }) {
   return (
     <div className="flex h-full flex-col">
       <div className="px-5 py-6">
-        <p className="app-text text-lg font-semibold tracking-tight">FitProgress AI</p>
-        <p className="app-muted mt-1 truncate text-sm">{user?.email}</p>
+        <div className="flex items-center gap-3">
+          <BrandLogo />
+          <div className="min-w-0">
+            <p className="app-text text-lg font-semibold tracking-tight">FitProgress</p>
+            <p className="app-muted mt-1 truncate text-sm">{user?.email}</p>
+          </div>
+        </div>
       </div>
 
       <nav className="flex-1 space-y-1 px-3">
