@@ -2,6 +2,14 @@ import { createContext, useCallback, useContext, useMemo, useState } from "react
 
 const ToastContext = createContext(null);
 
+function createToastId() {
+  if (globalThis.crypto?.randomUUID) {
+    return globalThis.crypto.randomUUID();
+  }
+
+  return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
+
 export function ToastProvider({ children }) {
   const [toasts, setToasts] = useState([]);
 
@@ -11,7 +19,7 @@ export function ToastProvider({ children }) {
 
   const showToast = useCallback(
     ({ title, message, type = "success" }) => {
-      const id = crypto.randomUUID();
+      const id = createToastId();
       setToasts((current) => [...current, { id, title, message, type }]);
       window.setTimeout(() => removeToast(id), 3500);
     },
