@@ -39,6 +39,8 @@
 - [Rodando com Docker](#-rodando-com-docker)
 - [Rodando sem Docker](#-rodando-sem-docker)
 - [Rotas da API](#-rotas-da-api)
+- [Testes](#-testes)
+- [CI/CD](#-cicd)
 - [Deploy na AWS](#-deploy-na-aws-ec2)
 - [Comandos Úteis](#-comandos-úteis)
 
@@ -277,6 +279,14 @@ VITE_SUPABASE_ANON_KEY=sua-chave-anon-public
 
 > Use sempre a chave **`anon public`** do Supabase.
 
+### Sobre a chave anon no frontend
+
+O frontend usa `VITE_SUPABASE_ANON_KEY`. Em projetos Vite, toda variável iniciada com `VITE_` é embutida no bundle final e fica visível no navegador.
+
+Isso é uma decisão consciente neste projeto: a chave `anon public` do Supabase foi feita para uso em clientes web. A proteção dos dados não depende de esconder essa chave, e sim das políticas de RLS no Supabase, da validação do JWT no backend e da regra `usuario_id = auth.uid()`.
+
+Nunca use a chave `service_role` no frontend. Essa chave tem privilégios administrativos e deve permanecer fora do cliente.
+
 ---
 
 ## 🐳 Rodando com Docker
@@ -391,6 +401,96 @@ CORS_ORIGINS=http://IP_PUBLICO_DA_EC2
 
 ---
 
+## 🧪 Testes
+
+O projeto possui uma base inicial de testes unitários para regras de negócio do backend. Esses testes não dependem de Supabase, Docker ou servidor rodando.
+
+Arquivos:
+
+```text
+tests/
+  test_pr_service.py
+  test_dashboard_service.py
+```
+
+Cobertura inicial:
+
+- Cálculo de PR por exercício.
+- Ignorar dados inválidos no cálculo de recordes.
+- Contagem de sessões de treino agrupadas por `sessao_id`.
+- Resumo do dashboard com treinos, peso, metas e recordes.
+
+Para rodar localmente, instale as dependências e execute:
+
+```bash
+pip install -r requirements.txt
+pytest
+```
+
+Também é possível rodar dentro do container do backend:
+
+```bash
+docker compose exec backend pytest
+```
+
+---
+
+## 🚀 CI/CD
+
+O repositório possui um workflow em:
+
+```text
+.github/workflows/deploy.yml
+```
+
+Esse pipeline roda automaticamente a cada push na branch `main` e também pode ser executado manualmente pelo botão **Run workflow** no GitHub Actions.
+
+Etapas executadas:
+
+- Instala dependências do backend.
+- Roda testes com `pytest`.
+- Instala dependências do frontend.
+- Gera build de produção com Vite.
+- Conecta na EC2 via SSH.
+- Atualiza o código com `git fetch` e `git reset --hard origin/main`.
+- Rebuilda os containers com Docker Compose.
+- Remove imagens antigas sem uso.
+
+### Secrets necessários no GitHub
+
+Configure em:
+
+```text
+GitHub > Repository > Settings > Secrets and variables > Actions > New repository secret
+```
+
+Secrets:
+
+| Secret | Descrição |
+|---|---|
+| `SUPABASE_URL` | URL do projeto Supabase, exemplo `https://xxxx.supabase.co` |
+| `SUPABASE_KEY` | Chave `anon public` do Supabase |
+| `EC2_HOST` | IP público ou domínio da EC2 |
+| `EC2_USER` | Usuário SSH da EC2, normalmente `ubuntu` |
+| `EC2_SSH_KEY` | Conteúdo completo da chave privada `.pem` |
+| `EC2_PROJECT_PATH` | Caminho do projeto na EC2, exemplo `/home/ubuntu/fitprogress` |
+
+O arquivo `.env` de produção continua existindo somente na EC2. Ele não é versionado e não deve ser enviado ao GitHub.
+
+### Observação sobre SSH e Security Group
+
+Para o deploy automático funcionar, o GitHub Actions precisa conseguir conectar via SSH na EC2.
+
+Se o Security Group estiver com a porta `22` liberada apenas para o seu IP pessoal, o deploy automático não conseguirá acessar a instância. Para um ambiente de portfólio, é possível liberar SSH temporariamente para a origem necessária durante a configuração, mantendo a autenticação por chave privada.
+
+Em produção real, prefira uma abordagem mais restrita, como:
+
+- AWS Systems Manager Session Manager.
+- Runner self-hosted dentro da própria VPC.
+- Pipeline que atualiza dinamicamente a regra SSH apenas durante o deploy.
+
+---
+
 ## 🧰 Comandos Úteis
 
 ```bash
@@ -407,6 +507,9 @@ docker compose -f docker-compose.prod.yml down
 
 # Backend local
 uvicorn backend.main:app --reload
+
+# Testes do backend
+pytest
 
 # Frontend local
 cd frontend && npm run dev
