@@ -1,0 +1,251 @@
+@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: #f8fafc;
+  --surface: #ffffff;
+  --surface-muted: #f1f5f9;
+  --border: #e2e8f0;
+  --text: #0f172a;
+  --muted: #64748b;
+  --soft: #f8fafc;
+  --accent: #10b981;
+  --accent-hover: #34d399;
+  --accent-bright: #6ee7b7;
+  --accent-soft: color-mix(in srgb, var(--accent) 12%, transparent);
+  --accent-border: color-mix(in srgb, var(--accent) 34%, transparent);
+  --accent-contrast: #04110c;
+}
+
+:root[data-theme="dark"] {
+  --bg: #030712;
+  --surface: #111827;
+  --surface-muted: #0b1220;
+  --border: #1f2937;
+  --text: #ffffff;
+  --muted: #9ca3af;
+  --soft: #020617;
+}
+
+:root[data-background="graphite"] {
+  --bg: #eef2f7;
+  --surface: #ffffff;
+  --surface-muted: #e8edf5;
+  --border: #d7deea;
+  --text: #101828;
+  --muted: #667085;
+  --soft: #f7f9fc;
+}
+
+:root[data-theme="dark"][data-background="graphite"] {
+  --bg: #080a12;
+  --surface: #111827;
+  --surface-muted: #0c1220;
+  --border: #273244;
+  --text: #f8fafc;
+  --muted: #a6adbb;
+  --soft: #05070d;
+}
+
+:root[data-background="plum"] {
+  --bg: #faf5ff;
+  --surface: #ffffff;
+  --surface-muted: #f3e8ff;
+  --border: #e9d5ff;
+  --text: #241330;
+  --muted: #745583;
+  --soft: #fdfaff;
+}
+
+:root[data-theme="dark"][data-background="plum"] {
+  --bg: #120a1f;
+  --surface: #1c102e;
+  --surface-muted: #170c27;
+  --border: #35204f;
+  --text: #fbf7ff;
+  --muted: #c9b7da;
+  --soft: #0c0615;
+}
+
+:root[data-accent="violet"] {
+  --accent: #8b5cf6;
+  --accent-hover: #a78bfa;
+  --accent-bright: #c4b5fd;
+  --accent-contrast: #ffffff;
+}
+
+:root[data-accent="rose"] {
+  --accent: #e11d48;
+  --accent-hover: #fb7185;
+  --accent-bright: #fda4af;
+  --accent-contrast: #ffffff;
+}
+
+:root[data-accent="teal"] {
+  --accent: #14b8a6;
+  --accent-hover: #2dd4bf;
+  --accent-bright: #5eead4;
+  --accent-contrast: #042f2e;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--bg);
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--text);
+  font-family:
+    "Plus Jakarta Sans", Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  text-rendering: geometricPrecision;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+::selection {
+  background: var(--accent-border);
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+  opacity: 0.7;
+}
+
+:root[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+}
+
+@layer components {
+  .app-bg {
+    background: var(--bg);
+    color: var(--text);
+  }
+
+  .app-surface {
+    background: var(--surface);
+    border-color: var(--border);
+  }
+
+  .app-surface-muted {
+    background: var(--surface-muted);
+  }
+
+  .app-border {
+    border-color: var(--border);
+  }
+
+  .app-text {
+    color: var(--text);
+  }
+
+  .app-muted {
+    color: var(--muted);
+  }
+
+  .app-label {
+    color: color-mix(in srgb, var(--text) 82%, var(--muted));
+  }
+
+  .app-control {
+    background:
+      linear-gradient(180deg, color-mix(in srgb, var(--surface) 96%, white 4%), var(--surface));
+    border: 1px solid var(--border);
+    border-radius: 0.85rem;
+    color: var(--text);
+    outline: none;
+    transition:
+      border-color 160ms ease,
+      box-shadow 160ms ease,
+      background-color 160ms ease,
+      transform 160ms ease;
+  }
+
+  .app-control:hover {
+    border-color: color-mix(in srgb, var(--accent) 42%, var(--border));
+  }
+
+  .app-control:focus,
+  .app-control:focus-within {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 4px var(--accent-soft);
+  }
+
+  .app-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in srgb, var(--accent) 55%, var(--border)) transparent;
+  }
+
+  .app-scroll::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  .app-scroll::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .app-scroll::-webkit-scrollbar-thumb {
+    background: color-mix(in srgb, var(--accent) 48%, var(--border));
+    border-radius: 999px;
+  }
+}
+
+.text-emerald-500,
+.hover\:text-emerald-500:hover {
+  color: var(--accent) !important;
+}
+
+.text-emerald-400,
+.text-emerald-300 {
+  color: var(--accent-bright) !important;
+}
+
+.bg-emerald-500 {
+  background-color: var(--accent) !important;
+}
+
+.bg-emerald-400,
+.hover\:bg-emerald-400:hover {
+  background-color: var(--accent-hover) !important;
+}
+
+.bg-emerald-500\/10,
+.hover\:bg-emerald-500\/10:hover {
+  background-color: var(--accent-soft) !important;
+}
+
+.border-emerald-500\/20,
+.border-emerald-500\/30,
+.border-emerald-500\/40,
+.hover\:border-emerald-500\/40:hover {
+  border-color: var(--accent-border) !important;
+}
+
+.focus\:border-emerald-500:focus {
+  border-color: var(--accent) !important;
+}
+
+.focus\:ring-emerald-500\/10:focus {
+  --tw-ring-color: var(--accent-soft) !important;
+}
+
+.bg-emerald-500.text-gray-950,
+.bg-emerald-500 .text-gray-950 {
+  color: var(--accent-contrast) !important;
+}
