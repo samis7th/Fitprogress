@@ -361,8 +361,8 @@ Authorization: Bearer SEU_ACCESS_TOKEN
 
 ```bash
 # 1. Clonar repositório
-git clone URL_DO_REPOSITORIO fitprogress-ai
-cd fitprogress-ai
+git clone URL_DO_REPOSITORIO fitprogress
+cd fitprogress
 
 # 2. Criar arquivo .env
 nano .env
