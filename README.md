@@ -2,7 +2,7 @@
 
 <br>
 
-# 🏋️ FitProgress AI
+# 🏋️ FitProgress 
 
 **Plataforma full stack para acompanhamento de treinos, evolução corporal, metas de carga e nutrição.**
 
