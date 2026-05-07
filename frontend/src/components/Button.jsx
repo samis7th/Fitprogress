@@ -7,6 +7,7 @@ export default function Button({ children, className = "", variant = "primary", 
 
   return (
     <button
+      type="button"
       className={`rounded-lg px-3.5 py-2.5 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-60 ${variants[variant]} ${className}`}
       {...props}
     >

@@ -31,19 +31,40 @@ export default function CreateExerciseModal({ initialName, initialGroup, onClose
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(event) {
-    event.preventDefault();
+    event?.preventDefault();
+    event?.stopPropagation();
+
+    if (!form.nome.trim() || !form.grupo || !form.categoria) {
+      return;
+    }
+
     setLoading(true);
 
     try {
-      await onCreate(form);
+      await onCreate({
+        nome: form.nome.trim(),
+        grupo: form.grupo,
+        categoria: form.categoria,
+      });
     } finally {
       setLoading(false);
     }
   }
 
+  function handleKeyDown(event) {
+    if (event.key === "Enter") {
+      handleSubmit(event);
+    }
+  }
+
   return (
     <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/70 px-4">
-      <form onSubmit={handleSubmit} className="app-surface app-border w-full max-w-md rounded-2xl border p-5">
+      <div
+        role="dialog"
+        aria-modal="true"
+        className="app-surface app-border w-full max-w-md rounded-2xl border p-5"
+        onKeyDown={handleKeyDown}
+      >
         <div className="flex items-start justify-between gap-4">
           <div>
             <h2 className="app-text text-lg font-semibold">Criar exercício</h2>
@@ -81,11 +102,11 @@ export default function CreateExerciseModal({ initialName, initialGroup, onClose
           <Button type="button" variant="secondary" onClick={onClose}>
             Cancelar
           </Button>
-          <Button type="submit" disabled={loading}>
+          <Button type="button" onClick={handleSubmit} disabled={loading}>
             {loading ? "Salvando..." : "Criar exercício"}
           </Button>
         </div>
-      </form>
+      </div>
     </div>
   );
 }

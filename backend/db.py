@@ -20,7 +20,12 @@ def _get_supabase_credentials() -> tuple[str, str]:
             "SUPABASE_URL e SUPABASE_KEY devem estar configuradas no .env"
         )
 
-    return supabase_url, supabase_key
+    dashboard_prefix = "https://supabase.com/dashboard/project/"
+    if supabase_url.startswith(dashboard_prefix):
+        project_ref = supabase_url.removeprefix(dashboard_prefix).split("/")[0]
+        supabase_url = f"https://{project_ref}.supabase.co"
+
+    return supabase_url.rstrip("/"), supabase_key
 
 
 @lru_cache

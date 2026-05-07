@@ -7,6 +7,20 @@ const USER_KEY = "fitprogress_user";
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
+function getSupabaseAuthUrl() {
+  if (!supabaseUrl) return "";
+
+  const dashboardMatch = supabaseUrl.match(
+    /^https:\/\/supabase\.com\/dashboard\/project\/([^/?#]+)/,
+  );
+
+  if (dashboardMatch?.[1]) {
+    return `https://${dashboardMatch[1]}.supabase.co`;
+  }
+
+  return supabaseUrl.replace(/\/$/, "");
+}
+
 function decodeJwtPayload(token) {
   try {
     const [, payload] = token.split(".");
@@ -49,7 +63,14 @@ export function getRefreshToken() {
 
 export function getCurrentUser() {
   const storedUser = localStorage.getItem(USER_KEY);
-  return storedUser ? JSON.parse(storedUser) : null;
+  if (!storedUser) return null;
+
+  try {
+    return JSON.parse(storedUser);
+  } catch {
+    localStorage.removeItem(USER_KEY);
+    return null;
+  }
 }
 
 export function isAuthenticated() {
@@ -58,17 +79,18 @@ export function isAuthenticated() {
 
 export async function refreshSession() {
   const refreshToken = getRefreshToken();
+  const authUrl = getSupabaseAuthUrl();
 
   if (!refreshToken) {
     throw new Error("Sessão expirada. Faça login novamente.");
   }
 
-  if (!supabaseUrl || !supabaseAnonKey) {
+  if (!authUrl || !supabaseAnonKey) {
     throw new Error("Configure as variáveis VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY.");
   }
 
   const { data } = await axios.post(
-    `${supabaseUrl}/auth/v1/token?grant_type=refresh_token`,
+    `${authUrl}/auth/v1/token?grant_type=refresh_token`,
     { refresh_token: refreshToken },
     {
       headers: {
@@ -93,12 +115,14 @@ export async function ensureAccessToken() {
 }
 
 export async function login(email, password) {
-  if (!supabaseUrl || !supabaseAnonKey) {
+  const authUrl = getSupabaseAuthUrl();
+
+  if (!authUrl || !supabaseAnonKey) {
     throw new Error("Configure as variáveis VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY.");
   }
 
   const { data } = await axios.post(
-    `${supabaseUrl}/auth/v1/token?grant_type=password`,
+    `${authUrl}/auth/v1/token?grant_type=password`,
     { email, password },
     {
       headers: {
@@ -114,12 +138,14 @@ export async function login(email, password) {
 }
 
 export async function register(name, email, password) {
-  if (!supabaseUrl || !supabaseAnonKey) {
+  const authUrl = getSupabaseAuthUrl();
+
+  if (!authUrl || !supabaseAnonKey) {
     throw new Error("Configure as variáveis VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY.");
   }
 
   const { data } = await axios.post(
-    `${supabaseUrl}/auth/v1/signup`,
+    `${authUrl}/auth/v1/signup`,
     {
       email,
       password,
