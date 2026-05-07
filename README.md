@@ -367,6 +367,57 @@ Authorization: Bearer SEU_ACCESS_TOKEN
 
 ---
 
+## 🧪 Testes
+
+O projeto possui testes automatizados iniciais para a camada de serviços do backend. Eles ajudam a garantir que as regras principais de cálculo continuem funcionando durante refatorações e novas funcionalidades.
+
+### Testes existentes
+
+| Arquivo | O que valida |
+|---|---|
+| `tests/test_pr_service.py` | Cálculo de recordes pessoais por exercício, tratamento de cargas inválidas e dados incompletos |
+| `tests/test_dashboard_service.py` | Montagem do resumo do dashboard, totais, último treino, peso atual e métricas semanais |
+
+### Rodar os testes localmente
+
+Na raiz do projeto:
+
+```powershell
+pip install -r requirements.txt
+pytest
+```
+
+Para uma saída mais detalhada:
+
+```powershell
+pytest -v
+```
+
+Para rodar um arquivo específico:
+
+```powershell
+pytest tests/test_pr_service.py
+pytest tests/test_dashboard_service.py
+```
+
+### Rodar com ambiente virtual
+
+```powershell
+python -m venv venv
+.\venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+pytest
+```
+
+### O que ainda pode ser evoluído
+
+- Testes das rotas FastAPI com `TestClient`.
+- Testes de autenticação para validar respostas `401` sem token.
+- Testes de integração simulando respostas do Supabase.
+- Testes de componentes críticos do frontend, principalmente login, seleção de exercícios e formulários.
+
+---
+
 ## ☁️ Deploy na AWS EC2
 
 ```bash
