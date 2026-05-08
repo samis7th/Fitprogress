@@ -28,23 +28,23 @@ export default function PesoChart({ data }) {
     <div className="h-72">
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={chartData} margin={{ top: 8, right: 10, left: -18, bottom: 0 }}>
-          <CartesianGrid stroke="#1F2937" strokeDasharray="4 4" />
-          <XAxis dataKey="dataFormatada" tick={{ fill: "#9CA3AF", fontSize: 12 }} />
-          <YAxis tick={{ fill: "#9CA3AF", fontSize: 12 }} />
+          <CartesianGrid stroke="rgba(148,163,184,.16)" strokeDasharray="4 4" />
+          <XAxis dataKey="dataFormatada" tick={{ fill: "var(--muted)", fontSize: 12 }} />
+          <YAxis tick={{ fill: "var(--muted)", fontSize: 12 }} />
           <Tooltip
             contentStyle={{
-              background: "#030712",
-              border: "1px solid #1F2937",
+              background: "var(--surface-raised)",
+              border: "1px solid var(--border-strong)",
               borderRadius: 12,
-              color: "#fff",
+              color: "var(--text)",
             }}
           />
           <Line
             type="monotone"
             dataKey="peso"
-            stroke="#34D399"
+            stroke="var(--accent)"
             strokeWidth={3}
-            dot={{ r: 4, fill: "#34D399" }}
+            dot={{ r: 4, fill: "var(--accent)" }}
             activeDot={{ r: 6 }}
           />
         </LineChart>

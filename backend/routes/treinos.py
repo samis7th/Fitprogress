@@ -9,6 +9,29 @@ from backend.services.pr_service import calcular_recordes
 router = APIRouter(prefix="/treinos", tags=["Treinos"])
 
 
+def _erro_coluna_opcional_inexistente(exc: Exception, coluna: str) -> bool:
+    mensagem = str(exc).lower()
+    return coluna in mensagem and ("does not exist" in mensagem or "schema cache" in mensagem)
+
+
+def _remover_campo(payload, campo: str):
+    if isinstance(payload, list):
+        return [{key: value for key, value in item.items() if key != campo} for item in payload]
+
+    return {key: value for key, value in payload.items() if key != campo}
+
+
+def _insert_treinos(supabase, payload):
+    try:
+        return supabase.table("treinos").insert(payload).execute()
+    except Exception as exc:
+        if _erro_coluna_opcional_inexistente(exc, "observacao"):
+            return _insert_treinos(supabase, _remover_campo(payload, "observacao"))
+        if _erro_coluna_opcional_inexistente(exc, "duracao_segundos"):
+            return _insert_treinos(supabase, _remover_campo(payload, "duracao_segundos"))
+        raise
+
+
 @router.post("", status_code=status.HTTP_201_CREATED)
 async def criar_treino(
     treino: TreinoCreate,
@@ -19,9 +42,7 @@ async def criar_treino(
         payload = treino.model_dump(mode="json")
         payload["usuario_id"] = current_user.id
 
-        response = await run_in_threadpool(
-            lambda: supabase.table("treinos").insert(payload).execute()
-        )
+        response = await run_in_threadpool(lambda: _insert_treinos(supabase, payload))
 
         return {
             "success": True,
@@ -74,9 +95,7 @@ async def criar_sessao_treino(
         supabase = get_authenticated_supabase_client(current_user.access_token)
         payload = sessao.to_insert_payloads(current_user.id)
 
-        response = await run_in_threadpool(
-            lambda: supabase.table("treinos").insert(payload).execute()
-        )
+        response = await run_in_threadpool(lambda: _insert_treinos(supabase, payload))
 
         return {
             "success": True,
@@ -142,7 +161,7 @@ async def listar_recordes_treinos(
     try:
         supabase = get_authenticated_supabase_client(current_user.access_token)
         query = supabase.table("treinos").select(
-            "id, usuario_id, exercicio, carga, repeticoes, series, data, created_at"
+            "id, exercicio, carga, repeticoes, series, data, created_at"
         )
         response = await run_in_threadpool(query.execute)
         recordes = calcular_recordes(response.data or [])

@@ -1,93 +1,120 @@
-@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  --bg: #f8fafc;
+  --bg: #f5f7fb;
   --surface: #ffffff;
-  --surface-muted: #f1f5f9;
-  --border: #e2e8f0;
-  --text: #0f172a;
-  --muted: #64748b;
-  --soft: #f8fafc;
-  --accent: #10b981;
-  --accent-hover: #34d399;
-  --accent-bright: #6ee7b7;
+  --surface-muted: #eef2f8;
+  --surface-raised: #ffffff;
+  --border: rgba(15, 23, 42, 0.09);
+  --border-strong: rgba(15, 23, 42, 0.16);
+  --text: #111827;
+  --muted: #667085;
+  --soft: #e8edf5;
+  --accent: #7c5cfc;
+  --accent-hover: #9276ff;
+  --accent-bright: #a891ff;
   --accent-soft: color-mix(in srgb, var(--accent) 12%, transparent);
-  --accent-border: color-mix(in srgb, var(--accent) 34%, transparent);
-  --accent-contrast: #04110c;
+  --accent-border: color-mix(in srgb, var(--accent) 36%, transparent);
+  --accent-contrast: #ffffff;
+  --success: #00b894;
+  --success-soft: rgba(0, 184, 148, 0.11);
+  --warning: #f59e0b;
+  --warning-soft: rgba(245, 158, 11, 0.12);
+  --danger: #f43f5e;
+  --danger-soft: rgba(244, 63, 94, 0.12);
+  --shadow-soft: 0 18px 48px rgba(15, 23, 42, 0.08);
 }
 
 :root[data-theme="dark"] {
-  --bg: #030712;
-  --surface: #111827;
-  --surface-muted: #0b1220;
-  --border: #1f2937;
-  --text: #ffffff;
-  --muted: #9ca3af;
-  --soft: #020617;
+  --bg: #0d0f14;
+  --surface: #13161e;
+  --surface-muted: #1a1e2a;
+  --surface-raised: #171b25;
+  --border: rgba(255, 255, 255, 0.07);
+  --border-strong: rgba(255, 255, 255, 0.13);
+  --text: #f0f2f8;
+  --muted: #8892a4;
+  --soft: #222737;
+  --shadow-soft: 0 18px 48px rgba(0, 0, 0, 0.28);
 }
 
 :root[data-background="graphite"] {
-  --bg: #eef2f7;
+  --bg: #f0f3f8;
   --surface: #ffffff;
   --surface-muted: #e8edf5;
-  --border: #d7deea;
+  --surface-raised: #ffffff;
+  --border: rgba(16, 24, 40, 0.1);
+  --border-strong: rgba(16, 24, 40, 0.18);
   --text: #101828;
   --muted: #667085;
-  --soft: #f7f9fc;
+  --soft: #e4eaf3;
 }
 
 :root[data-theme="dark"][data-background="graphite"] {
   --bg: #080a12;
   --surface: #111827;
-  --surface-muted: #0c1220;
-  --border: #273244;
+  --surface-muted: #151b28;
+  --surface-raised: #192132;
+  --border: rgba(255, 255, 255, 0.075);
+  --border-strong: rgba(255, 255, 255, 0.14);
   --text: #f8fafc;
-  --muted: #a6adbb;
-  --soft: #05070d;
+  --muted: #98a2b3;
+  --soft: #20293a;
 }
 
 :root[data-background="plum"] {
   --bg: #faf5ff;
   --surface: #ffffff;
   --surface-muted: #f3e8ff;
-  --border: #e9d5ff;
+  --surface-raised: #ffffff;
+  --border: rgba(88, 28, 135, 0.12);
+  --border-strong: rgba(88, 28, 135, 0.22);
   --text: #241330;
   --muted: #745583;
-  --soft: #fdfaff;
+  --soft: #f7efff;
 }
 
 :root[data-theme="dark"][data-background="plum"] {
   --bg: #120a1f;
-  --surface: #1c102e;
-  --surface-muted: #170c27;
-  --border: #35204f;
+  --surface: #1a1027;
+  --surface-muted: #211331;
+  --surface-raised: #27173b;
+  --border: rgba(233, 213, 255, 0.11);
+  --border-strong: rgba(233, 213, 255, 0.18);
   --text: #fbf7ff;
   --muted: #c9b7da;
-  --soft: #0c0615;
+  --soft: #301b48;
+}
+
+:root[data-accent="emerald"] {
+  --accent: #00d4aa;
+  --accent-hover: #34e4c0;
+  --accent-bright: #6ef2d8;
+  --accent-contrast: #04110c;
 }
 
 :root[data-accent="violet"] {
-  --accent: #8b5cf6;
-  --accent-hover: #a78bfa;
-  --accent-bright: #c4b5fd;
+  --accent: #7c5cfc;
+  --accent-hover: #9276ff;
+  --accent-bright: #a891ff;
   --accent-contrast: #ffffff;
 }
 
 :root[data-accent="rose"] {
-  --accent: #e11d48;
+  --accent: #f43f5e;
   --accent-hover: #fb7185;
   --accent-bright: #fda4af;
   --accent-contrast: #ffffff;
 }
 
 :root[data-accent="teal"] {
-  --accent: #14b8a6;
-  --accent-hover: #2dd4bf;
-  --accent-bright: #5eead4;
+  --accent: #21d9c8;
+  --accent-hover: #5eead4;
+  --accent-bright: #99f6e4;
   --accent-contrast: #042f2e;
 }
 
@@ -97,19 +124,73 @@
 
 html {
   background: var(--bg);
+  scroll-behavior: smooth;
 }
 
 body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-  background: var(--bg);
+  background:
+    radial-gradient(circle at top left, color-mix(in srgb, var(--accent) 9%, transparent), transparent 26rem),
+    var(--bg);
   color: var(--text);
   font-family:
-    "Plus Jakarta Sans", Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-    sans-serif;
+    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   text-rendering: geometricPrecision;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  body {
+    transition:
+      background-color 220ms ease,
+      color 180ms ease;
+  }
+
+  .page-transition {
+    animation: page-enter 260ms cubic-bezier(0.22, 1, 0.36, 1);
+    transform-origin: top center;
+    will-change: opacity, transform;
+  }
+
+  .app-nav-enter {
+    animation: nav-enter 200ms ease-out;
+  }
+}
+
+@keyframes page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.995);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes nav-enter {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    scroll-behavior: auto !important;
+    transition-duration: 1ms !important;
+  }
 }
 
 button,
@@ -119,16 +200,12 @@ textarea {
   font: inherit;
 }
 
+button {
+  -webkit-tap-highlight-color: transparent;
+}
+
 ::selection {
   background: var(--accent-border);
-}
-
-input[type="date"]::-webkit-calendar-picker-indicator {
-  opacity: 0.7;
-}
-
-:root[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator {
-  filter: invert(1);
 }
 
 @layer components {
@@ -140,10 +217,28 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   .app-surface {
     background: var(--surface);
     border-color: var(--border);
+    transition:
+      background-color 180ms ease,
+      border-color 180ms ease,
+      box-shadow 180ms ease;
   }
 
   .app-surface-muted {
     background: var(--surface-muted);
+    transition:
+      background-color 180ms ease,
+      border-color 180ms ease;
+  }
+
+  .app-surface-raised {
+    background: var(--surface-raised);
+    border-color: var(--border-strong);
+    box-shadow: var(--shadow-soft);
+    transition:
+      background-color 180ms ease,
+      border-color 180ms ease,
+      box-shadow 180ms ease,
+      transform 180ms ease;
   }
 
   .app-border {
@@ -152,48 +247,50 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 
   .app-text {
     color: var(--text);
+    transition: color 160ms ease;
   }
 
   .app-muted {
     color: var(--muted);
+    transition: color 160ms ease;
   }
 
   .app-label {
-    color: color-mix(in srgb, var(--text) 82%, var(--muted));
+    color: color-mix(in srgb, var(--text) 84%, var(--muted));
+    letter-spacing: -0.01em;
   }
 
   .app-control {
-    background:
-      linear-gradient(180deg, color-mix(in srgb, var(--surface) 96%, white 4%), var(--surface));
-    border: 1px solid var(--border);
-    border-radius: 0.85rem;
+    background: var(--surface-muted);
+    border: 0.5px solid var(--border-strong);
+    border-radius: 0.65rem;
     color: var(--text);
     outline: none;
     transition:
-      border-color 160ms ease,
-      box-shadow 160ms ease,
-      background-color 160ms ease,
-      transform 160ms ease;
+      border-color 150ms ease,
+      box-shadow 150ms ease,
+      background-color 150ms ease,
+      transform 150ms ease;
   }
 
   .app-control:hover {
-    border-color: color-mix(in srgb, var(--accent) 42%, var(--border));
+    border-color: color-mix(in srgb, var(--accent) 36%, var(--border-strong));
   }
 
   .app-control:focus,
   .app-control:focus-within {
     border-color: var(--accent);
-    box-shadow: 0 0 0 4px var(--accent-soft);
+    box-shadow: 0 0 0 3px var(--accent-soft);
   }
 
   .app-scroll {
     scrollbar-width: thin;
-    scrollbar-color: color-mix(in srgb, var(--accent) 55%, var(--border)) transparent;
+    scrollbar-color: color-mix(in srgb, var(--accent) 50%, var(--soft)) transparent;
   }
 
   .app-scroll::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+    width: 7px;
+    height: 7px;
   }
 
   .app-scroll::-webkit-scrollbar-track {
@@ -201,8 +298,15 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   }
 
   .app-scroll::-webkit-scrollbar-thumb {
-    background: color-mix(in srgb, var(--accent) 48%, var(--border));
+    background: color-mix(in srgb, var(--accent) 44%, var(--soft));
     border-radius: 999px;
+  }
+
+  .badge-soft {
+    border-radius: 999px;
+    border: 0.5px solid var(--accent-border);
+    background: var(--accent-soft);
+    color: var(--accent-bright);
   }
 }
 

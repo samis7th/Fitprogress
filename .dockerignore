@@ -12,3 +12,7 @@ __pycache__
 .pytest_cache
 .mypy_cache
 .ruff_cache
+*.pem
+*.key
+id_rsa
+id_ed25519

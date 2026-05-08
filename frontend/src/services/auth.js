@@ -53,6 +53,13 @@ function saveSession(data) {
   }
 }
 
+function saveUser(user) {
+  if (user) {
+    localStorage.setItem(USER_KEY, JSON.stringify(user));
+    window.dispatchEvent(new Event("fitprogress:user-updated"));
+  }
+}
+
 export function getAccessToken() {
   return localStorage.getItem(ACCESS_TOKEN_KEY);
 }
@@ -162,6 +169,33 @@ export async function register(name, email, password) {
   saveSession(data);
 
   return data;
+}
+
+export async function updateUserProfile(metadata) {
+  const authUrl = getSupabaseAuthUrl();
+  const token = await ensureAccessToken();
+
+  if (!authUrl || !supabaseAnonKey) {
+    throw new Error("Configure as variaveis VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY.");
+  }
+
+  const { data } = await axios.put(
+    `${authUrl}/auth/v1/user`,
+    { data: metadata },
+    {
+      headers: {
+        apikey: supabaseAnonKey,
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    },
+  );
+
+  if (data.user) {
+    saveUser(data.user);
+  }
+
+  return data.user;
 }
 
 export function logout({ redirect = true } = {}) {

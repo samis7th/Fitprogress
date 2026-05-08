@@ -12,16 +12,16 @@ import {
 const ThemeContext = createContext(null);
 
 export const backgroundOptions = [
-  { id: "default", label: "Neutro", color: "linear-gradient(135deg, #f8fafc 0%, #030712 100%)" },
-  { id: "graphite", label: "Grafite", color: "linear-gradient(135deg, #eef2f7 0%, #080a12 100%)" },
-  { id: "plum", label: "Uva", color: "linear-gradient(135deg, #faf5ff 0%, #120a1f 100%)" },
+  { id: "default", label: "Carbono", color: "linear-gradient(135deg, #f5f7fb 0%, #0d0f14 100%)" },
+  { id: "graphite", label: "Grafite", color: "linear-gradient(135deg, #f0f3f8 0%, #080a12 100%)" },
+  { id: "plum", label: "Roxo profundo", color: "linear-gradient(135deg, #faf5ff 0%, #120a1f 100%)" },
 ];
 
 export const accentOptions = [
-  { id: "emerald", label: "Esmeralda", color: "#10B981" },
-  { id: "violet", label: "Violeta", color: "#8B5CF6" },
-  { id: "rose", label: "Rosa", color: "#E11D48" },
-  { id: "teal", label: "Teal", color: "#14B8A6" },
+  { id: "violet", label: "Violeta", color: "#7C5CFC" },
+  { id: "emerald", label: "Teal fitness", color: "#00D4AA" },
+  { id: "rose", label: "Energia", color: "#F43F5E" },
+  { id: "teal", label: "Ciano", color: "#21D9C8" },
 ];
 
 export function ThemeProvider({ children }) {

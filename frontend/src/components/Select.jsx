@@ -43,7 +43,7 @@ export default function Select({ label, options, value, onChange, placeholder = 
 
   return (
     <label className="relative block" ref={containerRef}>
-      {label && <span className="app-label mb-1.5 block text-sm font-semibold">{label}</span>}
+      {label && <span className="app-label mb-1.5 block text-xs font-semibold">{label}</span>}
       <button
         type="button"
         className={`app-control flex w-full items-center justify-between gap-3 px-3.5 py-2.5 text-left ${
@@ -60,7 +60,7 @@ export default function Select({ label, options, value, onChange, placeholder = 
       </button>
 
       {open && (
-        <div className="app-surface app-border app-scroll absolute z-[70] mt-2 max-h-56 w-full overflow-y-auto rounded-xl border p-1.5 shadow-2xl shadow-black/25">
+        <div className="app-surface-raised app-scroll absolute z-[70] mt-2 max-h-56 w-full overflow-y-auto rounded-xl border p-1.5">
           {normalizedOptions.map((option) => {
             const active = option.value === value;
 

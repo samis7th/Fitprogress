@@ -26,7 +26,7 @@ export default function Login() {
       await login(email, password);
       navigate("/", { replace: true });
     } catch (err) {
-      setError(err.response?.data?.msg || err.response?.data?.error_description || "Login inválido.");
+      setError(err.response?.data?.msg || err.response?.data?.error_description || "Login invalido.");
     } finally {
       setLoading(false);
     }
@@ -35,7 +35,7 @@ export default function Login() {
   return (
     <AuthShell
       title="Acesse sua conta"
-      subtitle="Entre para acompanhar seus treinos, metas e evolução em um só lugar."
+      subtitle="Entre para acompanhar treinos, metas e evolucao em um so lugar."
       error={error}
       onSubmit={handleSubmit}
       submit={

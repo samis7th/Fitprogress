@@ -1,10 +1,11 @@
-import { Navigate, Route, Routes } from "react-router-dom";
+import { Navigate, Outlet, Route, Routes } from "react-router-dom";
 
 import Layout from "./layout/Layout.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
 import Dieta from "./pages/Dieta.jsx";
 import Login from "./pages/Login.jsx";
 import Metas from "./pages/Metas.jsx";
+import Perfil from "./pages/Perfil.jsx";
 import Peso from "./pages/Peso.jsx";
 import Register from "./pages/Register.jsx";
 import Semana from "./pages/Semana.jsx";
@@ -16,7 +17,7 @@ function ProtectedRoute({ children }) {
     return <Navigate to="/login" replace />;
   }
 
-  return <Layout>{children}</Layout>;
+  return children || <Outlet />;
 }
 
 export default function App() {
@@ -24,54 +25,17 @@ export default function App() {
     <Routes>
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
-      <Route
-        path="/"
-        element={
-          <ProtectedRoute>
-            <Dashboard />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/treinos"
-        element={
-          <ProtectedRoute>
-            <Treinos />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/semana"
-        element={
-          <ProtectedRoute>
-            <Semana />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/peso"
-        element={
-          <ProtectedRoute>
-            <Peso />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/metas"
-        element={
-          <ProtectedRoute>
-            <Metas />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/dieta"
-        element={
-          <ProtectedRoute>
-            <Dieta />
-          </ProtectedRoute>
-        }
-      />
+      <Route element={<ProtectedRoute />}>
+        <Route element={<Layout />}>
+          <Route path="/" element={<Dashboard />} />
+          <Route path="/treinos" element={<Treinos />} />
+          <Route path="/semana" element={<Semana />} />
+          <Route path="/peso" element={<Peso />} />
+          <Route path="/metas" element={<Metas />} />
+          <Route path="/dieta" element={<Dieta />} />
+          <Route path="/perfil" element={<Perfil />} />
+        </Route>
+      </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

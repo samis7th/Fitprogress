@@ -5,6 +5,7 @@ drop index if exists public.peso_usuario_data_idx;
 drop index if exists public.metas_usuario_exercicio_idx;
 drop index if exists public.dieta_usuario_data_idx;
 drop index if exists public.treino_semana_usuario_dia_idx;
+drop index if exists public.treino_semana_usuario_dia_uidx;
 drop index if exists public.exercicios_nome_grupo_criador_uidx;
 
 create table if not exists public.treinos (
@@ -18,6 +19,8 @@ create table if not exists public.treinos (
   series integer null,
   carga numeric not null,
   repeticoes integer not null,
+  observacao text null,
+  duracao_segundos integer null,
   data date not null default current_date,
   created_at timestamptz not null default now()
 );
@@ -38,7 +41,37 @@ alter table public.treinos
 add column if not exists series integer null;
 
 alter table public.treinos
+add column if not exists observacao text null;
+
+alter table public.treinos
+add column if not exists duracao_segundos integer null;
+
+alter table public.treinos
 add column if not exists created_at timestamptz not null default now();
+
+update public.treinos
+set series = 10
+where series is not null
+  and series > 10;
+
+update public.treinos
+set series = 1
+where series is not null
+  and series < 1;
+
+do $$
+begin
+  if not exists (
+    select 1
+    from pg_constraint
+    where conname = 'treinos_series_range_check'
+      and conrelid = 'public.treinos'::regclass
+  ) then
+    alter table public.treinos
+    add constraint treinos_series_range_check
+    check (series is null or (series >= 1 and series <= 10));
+  end if;
+end $$;
 
 create table if not exists public.peso (
   id uuid primary key default gen_random_uuid(),
@@ -100,11 +133,19 @@ create table if not exists public.treino_semana (
   dia_semana text not null,
   nome_treino text not null,
   exercicios jsonb not null default '[]'::jsonb,
+  status text not null default 'agendado',
+  concluido_em timestamptz null,
   created_at timestamptz not null default now()
 );
 
 alter table public.treino_semana
 add column if not exists created_at timestamptz not null default now();
+
+alter table public.treino_semana
+add column if not exists status text not null default 'agendado';
+
+alter table public.treino_semana
+add column if not exists concluido_em timestamptz null;
 
 create table if not exists public.exercicios (
   id uuid primary key default gen_random_uuid(),
@@ -141,8 +182,24 @@ on public.metas (usuario_id, exercicio);
 create index if not exists dieta_usuario_data_idx
 on public.dieta (usuario_id, data desc);
 
-create index if not exists treino_semana_usuario_dia_idx
-on public.treino_semana (usuario_id, dia_semana);
+delete from public.treino_semana base
+using (
+  select id
+  from (
+    select
+      id,
+      row_number() over (
+        partition by usuario_id, lower(dia_semana)
+        order by created_at desc, id desc
+      ) as row_number
+    from public.treino_semana
+  ) ranked
+  where ranked.row_number > 1
+) duplicates
+where base.id = duplicates.id;
+
+create unique index if not exists treino_semana_usuario_dia_uidx
+on public.treino_semana (usuario_id, lower(dia_semana));
 
 create unique index if not exists exercicios_nome_grupo_criador_uidx
 on public.exercicios (

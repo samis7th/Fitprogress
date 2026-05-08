@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { Outlet, useLocation } from "react-router-dom";
 
 import Sidebar from "./Sidebar.jsx";
 import { accentOptions, backgroundOptions, useTheme } from "../context/ThemeContext.jsx";
@@ -44,7 +45,7 @@ function BackgroundOption({ active, color, label, onClick }) {
     <button
       type="button"
       onClick={onClick}
-      className={`app-border flex items-center gap-3 rounded-xl border p-2 text-left transition hover:border-emerald-500/40 ${
+      className={`app-border flex items-center gap-3 rounded-lg border p-2 text-left transition hover:border-emerald-500/40 ${
         active ? "bg-emerald-500/10 ring-1 ring-[var(--accent)]" : "app-surface-muted"
       }`}
     >
@@ -72,22 +73,29 @@ function AccentOption({ active, color, label, onClick }) {
 export default function Layout({ children }) {
   const { accent, background, setAccent, setBackground, theme, toggleTheme } = useTheme();
   const [appearanceOpen, setAppearanceOpen] = useState(false);
+  const location = useLocation();
+
+  useEffect(() => {
+    window.requestAnimationFrame(() => {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+  }, [location.pathname]);
 
   return (
-    <div className="app-bg min-h-screen">
+    <div className="min-h-screen bg-[var(--bg)] text-[var(--text)]">
       <Sidebar />
-      <div className="fixed right-4 top-4 z-40 lg:right-8">
+      <div className="fixed right-4 top-4 z-40 lg:right-6">
         <button
           type="button"
           onClick={() => setAppearanceOpen((current) => !current)}
-          className="app-surface app-muted flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition hover:text-emerald-500"
+          className="app-surface app-muted flex items-center gap-2 rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-semibold transition hover:border-emerald-500/40 hover:text-emerald-500"
         >
           <PaletteIcon />
           <span className="hidden sm:inline">Aparência</span>
         </button>
 
         {appearanceOpen && (
-          <div className="app-surface app-border absolute right-0 mt-3 w-[min(22rem,calc(100vw-2rem))] rounded-2xl border p-4 shadow-2xl shadow-black/20">
+          <div className="app-surface-raised absolute right-0 mt-3 w-[min(22rem,calc(100vw-2rem))] rounded-xl border p-4">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <p className="app-text text-sm font-semibold">Aparência</p>
@@ -105,7 +113,7 @@ export default function Layout({ children }) {
             <div className="mt-4 space-y-5">
               <section>
                 <p className="app-muted mb-2 text-xs font-semibold uppercase">Modo</p>
-                <div className="app-surface-muted app-border grid grid-cols-2 rounded-xl border p-1">
+                <div className="app-surface-muted app-border grid grid-cols-2 rounded-lg border p-1">
                   <button
                     type="button"
                     onClick={() => theme === "dark" && toggleTheme()}
@@ -162,8 +170,12 @@ export default function Layout({ children }) {
           </div>
         )}
       </div>
-      <main className="px-4 pb-10 pt-20 sm:px-6 lg:ml-64 lg:px-8 lg:py-8">
-        <div className="mx-auto max-w-7xl">{children}</div>
+      <main className="px-4 pb-8 pt-20 sm:px-6 lg:ml-[220px] lg:px-6 lg:py-6">
+        <div className="mx-auto max-w-[1320px]">
+          <div key={location.pathname} className="page-transition">
+            {children || <Outlet />}
+          </div>
+        </div>
       </main>
     </div>
   );

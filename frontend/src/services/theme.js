@@ -24,7 +24,7 @@ export function storeBackground(background) {
 
 export function getStoredAccent() {
   const accent = localStorage.getItem(ACCENT_KEY);
-  return ACCENT_OPTIONS.includes(accent) ? accent : "emerald";
+  return ACCENT_OPTIONS.includes(accent) ? accent : "violet";
 }
 
 export function storeAccent(accent) {

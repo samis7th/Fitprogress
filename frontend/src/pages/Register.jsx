@@ -27,7 +27,11 @@ export default function Register() {
       await register(name, email, password);
       navigate("/", { replace: true });
     } catch (err) {
-      setError(err.response?.data?.msg || err.response?.data?.error_description || "Não foi possível criar a conta.");
+      setError(
+        err.response?.data?.msg ||
+          err.response?.data?.error_description ||
+          "Nao foi possivel criar a conta.",
+      );
     } finally {
       setLoading(false);
     }
@@ -36,7 +40,7 @@ export default function Register() {
   return (
     <AuthShell
       title="Crie sua conta"
-      subtitle="Organize sua rotina e acompanhe sua evolução com uma experiência limpa."
+      subtitle="Organize sua rotina e acompanhe sua evolucao com uma experiencia limpa."
       error={error}
       onSubmit={handleSubmit}
       submit={
@@ -49,7 +53,7 @@ export default function Register() {
           to="/login"
           className="font-semibold text-emerald-400 transition hover:text-emerald-300"
         >
-          Já tenho conta
+          Ja tenho conta
         </Link>
       }
     >
@@ -73,7 +77,7 @@ export default function Register() {
         type="password"
         value={password}
         onChange={(event) => setPassword(event.target.value)}
-        placeholder="Mínimo 6 caracteres"
+        placeholder="Minimo 6 caracteres"
         required
       />
     </AuthShell>

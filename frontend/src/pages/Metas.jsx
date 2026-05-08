@@ -43,7 +43,7 @@ export default function Metas() {
       setMetas(metasRes.data.data || []);
       setPrs(prsRes.data.data || []);
     } catch (err) {
-      setError(getApiErrorMessage(err, "Não foi possível carregar as metas."));
+      setError(getApiErrorMessage(err, "Nao foi possivel carregar as metas."));
     }
   }
 
@@ -62,6 +62,19 @@ export default function Metas() {
       }, {}),
     [prs],
   );
+
+  const resumo = useMemo(() => {
+    const concluidas = metas.filter((meta) => {
+      const atual = prPorExercicio[meta.exercicio.toLowerCase()] || { carga: 0 };
+      return meta.concluida || isMetaAutomaticallyReached(meta, atual);
+    }).length;
+
+    return {
+      total: metas.length,
+      concluidas,
+      ativas: Math.max(metas.length - concluidas, 0),
+    };
+  }, [metas, prPorExercicio]);
 
   async function submit(event) {
     event.preventDefault();
@@ -82,7 +95,7 @@ export default function Metas() {
       showToast({ title: "Meta criada", message: "Progresso atualizado automaticamente." });
       load();
     } catch (err) {
-      const message = getApiErrorMessage(err, "Não foi possível criar a meta.");
+      const message = getApiErrorMessage(err, "Nao foi possivel criar a meta.");
       setError(message);
       showToast({ title: "Erro ao criar meta", message, type: "error" });
     }
@@ -94,14 +107,14 @@ export default function Metas() {
       const concluida = !meta.concluida;
       await api.patch(`/metas/${meta.id}`, { concluida });
       showToast({
-        title: concluida ? "Meta concluída" : "Meta reaberta",
+        title: concluida ? "Meta concluida" : "Meta reaberta",
         message: concluida
-          ? "A meta foi marcada como concluída."
+          ? "A meta foi marcada como concluida."
           : "A meta voltou para acompanhamento.",
       });
       load();
     } catch (err) {
-      const message = getApiErrorMessage(err, "Não foi possível atualizar a meta.");
+      const message = getApiErrorMessage(err, "Nao foi possivel atualizar a meta.");
       setError(message);
       showToast({ title: "Erro ao atualizar meta", message, type: "error" });
     }
@@ -116,33 +129,57 @@ export default function Metas() {
       showToast({ title: "Meta removida" });
       load();
     } catch (err) {
-      const message = getApiErrorMessage(err, "Não foi possível remover a meta.");
+      const message = getApiErrorMessage(err, "Nao foi possivel remover a meta.");
       setError(message);
       showToast({ title: "Erro ao remover meta", message, type: "error" });
     }
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <p className="text-sm font-medium text-emerald-500">Metas</p>
-        <h1 className="app-text mt-1 text-3xl font-semibold tracking-tight">
-          Progresso de carga
-        </h1>
+    <div className="space-y-5">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-emerald-500">
+            Metas
+          </p>
+          <h1 className="app-text mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">
+            Progresso de carga
+          </h1>
+          <p className="app-muted mt-2 max-w-2xl text-sm">
+            Defina objetivos por exercicio e acompanhe quando o PR atual alcanca a meta.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-3 gap-2">
+          {[
+            ["Ativas", resumo.ativas],
+            ["Concluidas", resumo.concluidas],
+            ["Total", resumo.total],
+          ].map(([label, value]) => (
+            <div key={label} className="app-surface app-border rounded-2xl border px-4 py-3">
+              <p className="app-muted text-xs">{label}</p>
+              <p className="app-text mt-1 text-xl font-semibold">{value}</p>
+            </div>
+          ))}
+        </div>
       </div>
 
       {error && (
-        <div className="rounded-xl border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-200">
+        <div className="rounded-2xl border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-200">
           {error}
         </div>
       )}
 
-      <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
+      <div className="grid gap-5 xl:grid-cols-[minmax(0,0.9fr)_minmax(360px,1.1fr)]">
         <Card>
           <h2 className="app-text text-lg font-semibold">Nova meta</h2>
-          <form onSubmit={submit} className="mt-4 space-y-4">
+          <p className="app-muted mt-1 text-sm">
+            Escolha o exercicio e registre a carga que quer bater.
+          </p>
+
+          <form onSubmit={submit} className="mt-5 space-y-4">
             <div>
-              <span className="app-label mb-2 block text-sm font-semibold">Exercício</span>
+              <span className="app-label mb-2 block text-sm font-semibold">Exercicio</span>
               <ExerciseSelector
                 value={form.exercicio}
                 selectedExercise={form.selectedExercise}
@@ -166,7 +203,7 @@ export default function Metas() {
                 required
               />
               <Input
-                label="Repetições alvo"
+                label="Repeticoes alvo"
                 type="number"
                 value={form.meta_repeticoes}
                 onChange={(event) => setForm({ ...form, meta_repeticoes: event.target.value })}
@@ -179,17 +216,21 @@ export default function Metas() {
           </form>
         </Card>
 
-        <Card className="xl:max-h-[calc(100vh-11rem)] xl:overflow-y-auto">
-          <h2 className="app-text text-lg font-semibold">Metas ativas</h2>
-          <div className="mt-4 space-y-3">
+        <Card className="xl:max-h-[calc(100vh-10rem)] xl:overflow-y-auto app-scroll">
+          <div>
+            <h2 className="app-text text-lg font-semibold">Metas cadastradas</h2>
+            <p className="app-muted mt-1 text-sm">Acompanhamento manual e automatico.</p>
+          </div>
+
+          <div className="mt-4 grid gap-3">
             {metas.map((meta) => {
               const atual = prPorExercicio[meta.exercicio.toLowerCase()] || { carga: 0 };
               const atingidaAutomaticamente = isMetaAutomaticallyReached(meta, atual);
 
               return (
-                <div key={meta.id} className="space-y-2">
+                <div key={meta.id} className="app-surface-muted app-border rounded-2xl border p-3">
                   <MetaProgress meta={meta} atual={atual} />
-                  <div className="flex flex-wrap justify-end gap-2">
+                  <div className="mt-3 flex flex-wrap justify-end gap-2">
                     {meta.concluida && (
                       <Button
                         type="button"
@@ -205,7 +246,7 @@ export default function Metas() {
                         variant="primary"
                         onClick={() => toggleMetaConcluida(meta)}
                       >
-                        Marcar como concluída
+                        Marcar concluida
                       </Button>
                     )}
                     {!meta.concluida && atingidaAutomaticamente && (
@@ -220,6 +261,7 @@ export default function Metas() {
                 </div>
               );
             })}
+
             {!metas.length && (
               <EmptyState title="Sem metas" description="Crie uma meta para acompanhar progresso." />
             )}

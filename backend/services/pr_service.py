@@ -44,7 +44,6 @@ def calcular_recordes(treinos: list[TreinoRecord]) -> list[dict[str, Any]]:
                 "carga": carga,
                 "repeticoes": treino.get("repeticoes"),
                 "data": treino.get("data"),
-                "usuario_id": treino.get("usuario_id"),
             }
 
     return sorted(

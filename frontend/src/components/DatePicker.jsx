@@ -100,7 +100,7 @@ export default function DatePicker({ label, value, onChange, className = "" }) {
 
   return (
     <label className={`relative block ${className}`} ref={containerRef}>
-      {label && <span className="app-label mb-1.5 block text-sm font-semibold">{label}</span>}
+      {label && <span className="app-label mb-1.5 block text-xs font-semibold">{label}</span>}
       <button
         type="button"
         className={`app-control flex w-full items-center justify-between gap-3 px-3.5 py-2.5 text-left ${
@@ -117,7 +117,7 @@ export default function DatePicker({ label, value, onChange, className = "" }) {
       </button>
 
       {open && (
-        <div className="app-surface app-border absolute z-[80] mt-2 w-72 rounded-2xl border p-3 shadow-2xl shadow-black/25">
+        <div className="app-surface-raised absolute z-[80] mt-2 w-72 rounded-xl border p-3">
           <div className="flex items-center justify-between gap-2">
             <button
               type="button"

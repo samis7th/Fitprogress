@@ -1,3 +1,5 @@
+import unicodedata
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from starlette.concurrency import run_in_threadpool
 
@@ -30,6 +32,30 @@ def ordenar_por_dia_semana(treinos: list[dict]) -> list[dict]:
     )
 
 
+def normalizar_dia_semana(dia_semana: str | None) -> str:
+    texto = str(dia_semana or "").strip().lower()
+    texto = unicodedata.normalize("NFD", texto)
+    return "".join(char for char in texto if unicodedata.category(char) != "Mn")
+
+
+def deduplicar_por_dia_semana(treinos: list[dict]) -> list[dict]:
+    treinos_por_dia: dict[str, dict] = {}
+
+    for treino in treinos:
+        dia_normalizado = normalizar_dia_semana(treino.get("dia_semana"))
+        if not dia_normalizado:
+            continue
+
+        treino_atual = treinos_por_dia.get(dia_normalizado)
+        treino_created_at = str(treino.get("created_at") or "")
+        atual_created_at = str(treino_atual.get("created_at") or "") if treino_atual else ""
+
+        if treino_atual is None or treino_created_at > atual_created_at:
+            treinos_por_dia[dia_normalizado] = treino
+
+    return ordenar_por_dia_semana(list(treinos_por_dia.values()))
+
+
 @router.post("", status_code=status.HTTP_201_CREATED)
 async def criar_treino_semana(
     treino: TreinoSemanaCreate,
@@ -39,6 +65,47 @@ async def criar_treino_semana(
         supabase = get_authenticated_supabase_client(current_user.access_token)
         payload = treino.model_dump(mode="json")
         payload["usuario_id"] = current_user.id
+        dia_normalizado = normalizar_dia_semana(payload.get("dia_semana"))
+
+        existentes_response = await run_in_threadpool(
+            lambda: supabase.table("treino_semana")
+            .select("id, dia_semana, created_at")
+            .execute()
+        )
+        treinos_mesmo_dia = [
+            item
+            for item in existentes_response.data or []
+            if normalizar_dia_semana(item.get("dia_semana")) == dia_normalizado
+        ]
+
+        if treinos_mesmo_dia:
+            treinos_mesmo_dia = sorted(
+                treinos_mesmo_dia,
+                key=lambda item: str(item.get("created_at") or ""),
+                reverse=True,
+            )
+            treino_principal = treinos_mesmo_dia[0]
+            response = await run_in_threadpool(
+                lambda: supabase.table("treino_semana")
+                .update(payload)
+                .eq("id", treino_principal["id"])
+                .execute()
+            )
+
+            ids_duplicados = [item["id"] for item in treinos_mesmo_dia[1:] if item.get("id")]
+            if ids_duplicados:
+                await run_in_threadpool(
+                    lambda: supabase.table("treino_semana")
+                    .delete()
+                    .in_("id", ids_duplicados)
+                    .execute()
+                )
+
+            return {
+                "success": True,
+                "message": "Treino da semana atualizado com sucesso",
+                "data": response.data,
+            }
 
         response = await run_in_threadpool(
             lambda: supabase.table("treino_semana").insert(payload).execute()
@@ -70,7 +137,7 @@ async def listar_treino_semana(
         return {
             "success": True,
             "message": "Treinos da semana listados com sucesso",
-            "data": ordenar_por_dia_semana(response.data or []),
+            "data": deduplicar_por_dia_semana(response.data or []),
         }
     except SupabaseConfigError as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc

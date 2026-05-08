@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { NavLink } from "react-router-dom";
 
 import BrandLogo from "../components/BrandLogo.jsx";
@@ -91,6 +91,15 @@ function DietaIcon() {
   );
 }
 
+function PerfilIcon() {
+  return (
+    <Icon>
+      <circle cx="12" cy="8" r="4" />
+      <path d="M4 21a8 8 0 0 1 16 0" />
+    </Icon>
+  );
+}
+
 function MenuIcon() {
   return (
     <Icon>
@@ -121,58 +130,117 @@ function LogoutIcon() {
 }
 
 const navItems = [
-  { to: "/", label: "Dashboard", icon: DashboardIcon },
-  { to: "/treinos", label: "Treinos", icon: TreinosIcon },
-  { to: "/semana", label: "Semana", icon: SemanaIcon },
-  { to: "/peso", label: "Peso", icon: PesoIcon },
-  { to: "/metas", label: "Metas", icon: MetasIcon },
-  { to: "/dieta", label: "Dieta", icon: DietaIcon },
+  {
+    section: "Principal",
+    items: [
+      { to: "/", label: "Dashboard", icon: DashboardIcon },
+      { to: "/treinos", label: "Treinos", icon: TreinosIcon },
+      { to: "/semana", label: "Semana", icon: SemanaIcon },
+    ],
+  },
+  {
+    section: "Progresso",
+    items: [
+      { to: "/metas", label: "Metas", icon: MetasIcon },
+      { to: "/peso", label: "Evolucao", icon: PesoIcon },
+      { to: "/dieta", label: "Dieta", icon: DietaIcon },
+    ],
+  },
+  {
+    section: "Conta",
+    items: [{ to: "/perfil", label: "Perfil", icon: PerfilIcon }],
+  },
 ];
 
 function SidebarContent({ onNavigate }) {
+  const [, setUserVersion] = useState(0);
   const user = getCurrentUser();
+  const metadata = user?.user_metadata || {};
+  const displayName = metadata.name || user?.email?.split("@")[0] || "Atleta";
+  const avatarUrl = metadata.avatar_url;
+  const initials = displayName
+    .split(" ")
+    .map((part) => part[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+
+  useEffect(() => {
+    function refreshUser() {
+      setUserVersion((current) => current + 1);
+    }
+
+    window.addEventListener("fitprogress:user-updated", refreshUser);
+    return () => window.removeEventListener("fitprogress:user-updated", refreshUser);
+  }, []);
 
   return (
     <div className="flex h-full flex-col">
-      <div className="px-5 py-6">
-        <div className="flex items-center gap-3">
+      <div className="px-4 py-5">
+        <div className="flex items-center gap-3 border-b border-[var(--border)] pb-4">
           <BrandLogo />
           <div className="min-w-0">
-            <p className="app-text text-lg font-semibold tracking-tight">FitProgress</p>
-            <p className="app-muted mt-1 truncate text-sm">{user?.email}</p>
+            <p className="app-text text-sm font-semibold tracking-tight">FitProgress</p>
+            <p className="app-muted mt-0.5 truncate text-[11px]">performance lab</p>
           </div>
         </div>
       </div>
 
-      <nav className="flex-1 space-y-1 px-3">
-        {navItems.map((item) => {
-          const Icon = item.icon;
+      <nav className="flex-1 space-y-4 px-3">
+        {navItems.map((group) => (
+          <div key={group.section}>
+            <p className="app-muted px-3 pb-1 text-[10px] font-bold uppercase tracking-[0.16em]">
+              {group.section}
+            </p>
+            <div className="space-y-1">
+              {group.items.map((item) => {
+                const Icon = item.icon;
 
-          return (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              onClick={onNavigate}
-              className={({ isActive }) =>
-                `flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition ${
-                  isActive
-                    ? "bg-emerald-500 text-gray-950"
-                    : "app-muted hover:bg-emerald-500/10 hover:text-emerald-500"
-                }`
-              }
-            >
-              <Icon size={18} />
-              <span>{item.label}</span>
-            </NavLink>
-          );
-        })}
+                return (
+                  <NavLink
+                    key={item.to}
+                    to={item.to}
+                    onClick={onNavigate}
+                    className={({ isActive }) =>
+                      `group flex items-center gap-3 rounded-lg px-3 py-2 text-[13px] font-medium transition duration-200 ease-out hover:translate-x-0.5 ${
+                        isActive
+                          ? "bg-emerald-500/10 text-emerald-500 ring-1 ring-[var(--accent-border)]"
+                          : "app-muted hover:bg-[var(--surface-muted)] hover:text-[var(--text)]"
+                      }`
+                    }
+                  >
+                    <Icon />
+                    <span>{item.label}</span>
+                  </NavLink>
+                );
+              })}
+            </div>
+          </div>
+        ))}
       </nav>
 
-      <div className="app-border border-t p-3">
+      <div className="p-3">
+        <NavLink
+          to="/perfil"
+          onClick={onNavigate}
+          className="mb-2 flex items-center gap-3 rounded-lg border border-[var(--border)] bg-[var(--surface-muted)] p-2.5 transition duration-200 ease-out hover:-translate-y-0.5 hover:border-[var(--accent-border)]"
+        >
+          <div className="grid h-8 w-8 shrink-0 place-items-center overflow-hidden rounded-full bg-emerald-500 text-xs font-bold text-[var(--accent-contrast)]">
+            {avatarUrl ? (
+              <img src={avatarUrl} alt="Perfil" className="h-full w-full object-cover" />
+            ) : (
+              initials
+            )}
+          </div>
+          <div className="min-w-0">
+            <p className="app-text truncate text-xs font-semibold">{displayName}</p>
+            <p className="app-muted truncate text-[10px]">{user?.email}</p>
+          </div>
+        </NavLink>
         <button
           type="button"
           onClick={() => logout()}
-          className="app-muted flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition hover:bg-red-500/10 hover:text-red-500"
+          className="app-muted flex w-full items-center gap-3 rounded-lg px-3 py-2 text-[13px] font-medium transition duration-200 ease-out hover:bg-red-500/10 hover:text-red-500"
         >
           <LogoutIcon />
           Sair
@@ -190,13 +258,13 @@ export default function Sidebar() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="app-surface app-muted fixed left-4 top-4 z-40 rounded-lg border p-2 lg:hidden"
+        className="app-surface app-muted fixed left-4 top-4 z-40 rounded-lg border p-2 transition duration-200 hover:-translate-y-0.5 hover:border-[var(--accent-border)] lg:hidden"
         aria-label="Abrir menu"
       >
         <MenuIcon />
       </button>
 
-      <aside className="app-bg app-border fixed inset-y-0 left-0 z-30 hidden w-64 border-r lg:block">
+      <aside className="app-surface app-border fixed inset-y-0 left-0 z-30 hidden w-[220px] border-r lg:block">
         <SidebarContent />
       </aside>
 
@@ -204,11 +272,11 @@ export default function Sidebar() {
         <div className="fixed inset-0 z-50 lg:hidden">
           <button
             type="button"
-            className="absolute inset-0 bg-black/70"
+            className="absolute inset-0 bg-black/70 transition-opacity"
             onClick={() => setOpen(false)}
             aria-label="Fechar menu"
           />
-          <aside className="app-bg app-border relative h-full w-72 border-r">
+          <aside className="app-nav-enter app-surface app-border relative h-full w-72 border-r">
             <button
               type="button"
               onClick={() => setOpen(false)}
