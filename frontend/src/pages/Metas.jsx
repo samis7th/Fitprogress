@@ -30,6 +30,18 @@ function isMetaAutomaticallyReached(meta, atual) {
   return !metaRepeticoes || repeticoesAtuais >= metaRepeticoes;
 }
 
+function getMetaState(meta, atual) {
+  if (meta.concluida) {
+    return { label: "Concluida", tone: "success" };
+  }
+
+  if (isMetaAutomaticallyReached(meta, atual)) {
+    return { label: "Atingida", tone: "success" };
+  }
+
+  return { label: "Em progresso", tone: "accent" };
+}
+
 export default function Metas() {
   const { showToast } = useToast();
   const [metas, setMetas] = useState([]);
@@ -75,6 +87,22 @@ export default function Metas() {
       ativas: Math.max(metas.length - concluidas, 0),
     };
   }, [metas, prPorExercicio]);
+
+  const metasOrdenadas = useMemo(
+    () =>
+      metas
+        .slice()
+        .sort((a, b) => {
+          const atualA = prPorExercicio[a.exercicio.toLowerCase()] || { carga: 0 };
+          const atualB = prPorExercicio[b.exercicio.toLowerCase()] || { carga: 0 };
+          const aConcluida = a.concluida || isMetaAutomaticallyReached(a, atualA);
+          const bConcluida = b.concluida || isMetaAutomaticallyReached(b, atualB);
+
+          if (aConcluida !== bConcluida) return aConcluida ? 1 : -1;
+          return a.exercicio.localeCompare(b.exercicio, "pt-BR");
+        }),
+    [metas, prPorExercicio],
+  );
 
   async function submit(event) {
     event.preventDefault();
@@ -152,13 +180,13 @@ export default function Metas() {
 
         <div className="grid grid-cols-3 gap-2">
           {[
-            ["Ativas", resumo.ativas],
-            ["Concluidas", resumo.concluidas],
-            ["Total", resumo.total],
-          ].map(([label, value]) => (
+            ["Ativas", resumo.ativas, "text-emerald-500"],
+            ["Concluidas", resumo.concluidas, "text-[var(--success)]"],
+            ["Total", resumo.total, "app-text"],
+          ].map(([label, value, color]) => (
             <div key={label} className="app-surface app-border rounded-2xl border px-4 py-3">
               <p className="app-muted text-xs">{label}</p>
-              <p className="app-text mt-1 text-xl font-semibold">{value}</p>
+              <p className={`mt-1 text-xl font-semibold ${color}`}>{value}</p>
             </div>
           ))}
         </div>
@@ -170,12 +198,19 @@ export default function Metas() {
         </div>
       )}
 
-      <div className="grid gap-5 xl:grid-cols-[minmax(0,0.9fr)_minmax(360px,1.1fr)]">
-        <Card>
-          <h2 className="app-text text-lg font-semibold">Nova meta</h2>
-          <p className="app-muted mt-1 text-sm">
-            Escolha o exercicio e registre a carga que quer bater.
-          </p>
+      <div className="grid items-start gap-5 xl:grid-cols-[minmax(320px,420px)_minmax(0,1fr)]">
+        <Card className="xl:sticky xl:top-5">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <h2 className="app-text text-lg font-semibold">Nova meta</h2>
+              <p className="app-muted mt-1 text-sm">
+                Escolha o exercicio e registre a carga que quer bater.
+              </p>
+            </div>
+            <span className="rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-500">
+              PR
+            </span>
+          </div>
 
           <form onSubmit={submit} className="mt-5 space-y-4">
             <div>
@@ -192,6 +227,13 @@ export default function Metas() {
                 }
               />
             </div>
+
+            {form.exercicio && (
+              <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-muted)] p-3">
+                <p className="app-muted text-xs">Meta para</p>
+                <p className="app-text mt-1 text-sm font-semibold">{form.exercicio}</p>
+              </div>
+            )}
 
             <div className="grid gap-3 sm:grid-cols-2">
               <Input
@@ -216,21 +258,47 @@ export default function Metas() {
           </form>
         </Card>
 
-        <Card className="xl:max-h-[calc(100vh-10rem)] xl:overflow-y-auto app-scroll">
-          <div>
-            <h2 className="app-text text-lg font-semibold">Metas cadastradas</h2>
-            <p className="app-muted mt-1 text-sm">Acompanhamento manual e automatico.</p>
+        <Card>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <h2 className="app-text text-lg font-semibold">Metas cadastradas</h2>
+              <p className="app-muted mt-1 text-sm">Acompanhamento manual e automatico.</p>
+            </div>
+            <span className="badge-soft w-fit px-3 py-1 text-xs font-semibold">
+              {resumo.ativas} em andamento
+            </span>
           </div>
 
           <div className="mt-4 grid gap-3">
-            {metas.map((meta) => {
+            {metasOrdenadas.map((meta) => {
               const atual = prPorExercicio[meta.exercicio.toLowerCase()] || { carga: 0 };
               const atingidaAutomaticamente = isMetaAutomaticallyReached(meta, atual);
+              const state = getMetaState(meta, atual);
 
               return (
-                <div key={meta.id} className="app-surface-muted app-border rounded-2xl border p-3">
+                <div
+                  key={meta.id}
+                  className="rounded-2xl border border-[var(--border)] bg-[var(--surface-muted)] p-4 transition hover:border-[var(--accent-border)] hover:bg-emerald-500/[0.03]"
+                >
+                  <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                    <span
+                      className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                        state.tone === "success"
+                          ? "bg-[var(--success-soft)] text-[var(--success)]"
+                          : "bg-emerald-500/10 text-emerald-500"
+                      }`}
+                    >
+                      {state.label}
+                    </span>
+                    <span className="app-muted text-xs">
+                      Atual: {Number(atual.carga || 0).toFixed(1)}kg
+                      {atual.repeticoes ? ` x ${atual.repeticoes}` : ""}
+                    </span>
+                  </div>
+
                   <MetaProgress meta={meta} atual={atual} />
-                  <div className="mt-3 flex flex-wrap justify-end gap-2">
+
+                  <div className="mt-4 flex flex-wrap justify-end gap-2 border-t border-[var(--border)] pt-3">
                     {meta.concluida && (
                       <Button
                         type="button"

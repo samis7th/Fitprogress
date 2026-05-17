@@ -8,7 +8,7 @@ import PesoChart from "../components/PesoChart.jsx";
 import Skeleton from "../components/Skeleton.jsx";
 import api from "../services/api.js";
 import { getCurrentUser } from "../services/auth.js";
-import { getLocalDateString } from "../utils/date.js";
+import { getLocalDateString, isPlanCompletedForDate } from "../utils/date.js";
 
 const weekDays = ["Domingo", "Segunda", "Terca", "Quarta", "Quinta", "Sexta", "Sabado"];
 const weekLabels = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sab"];
@@ -51,6 +51,11 @@ function SectionHeader({ title, action }) {
 
 function WeekOverview({ semana, todayName, onSelectDay }) {
   const todayIndex = weekDays.findIndex((day) => normalizeText(day) === normalizeText(todayName));
+  const currentWeekStart = useMemo(() => {
+    const date = new Date();
+    date.setDate(date.getDate() - date.getDay());
+    return date;
+  }, []);
   const plannedByDay = useMemo(
     () =>
       semana.reduce((acc, plan) => {
@@ -65,7 +70,9 @@ function WeekOverview({ semana, todayName, onSelectDay }) {
       {weekDays.map((day, index) => {
         const plan = plannedByDay[normalizeText(day)];
         const active = index === todayIndex;
-        const completed = plan?.status === "concluido";
+        const dayDate = new Date(currentWeekStart);
+        dayDate.setDate(currentWeekStart.getDate() + index);
+        const completed = isPlanCompletedForDate(plan, dayDate);
         const rest = !plan;
         const statusLabel = completed ? "Concluido" : active && plan ? "Disponivel hoje" : plan ? "Agendado" : "Recuperacao";
 
@@ -228,6 +235,7 @@ export default function Dashboard() {
     () => semana.find((treino) => normalizeText(treino.dia_semana) === normalizeText(todayName)),
     [semana, todayName],
   );
+  const treinoHojeConcluido = isPlanCompletedForDate(treinoHoje, today);
   const pesoAtual = resumo?.peso_atual;
   const pesoVariacao = resumo?.peso_variacao;
   const todayDate = getLocalDateString(today);
@@ -273,7 +281,7 @@ export default function Dashboard() {
                 : navigate("/semana")
             }
           >
-            {treinoHoje?.status === "concluido" ? "Ver treino" : treinoHoje ? "Iniciar treino" : "Planejar semana"}
+            {treinoHojeConcluido ? "Ver treino" : treinoHoje ? "Iniciar treino" : "Planejar semana"}
           </Button>
         </div>
       </div>
@@ -328,27 +336,29 @@ export default function Dashboard() {
         </div>
       )}
 
-      <div className="grid gap-4 xl:grid-cols-[1.45fr_0.85fr]">
-        <Card>
-          <SectionHeader
-            title="Semana atual"
-            action={
-              <button
-                type="button"
-                className="text-xs font-semibold text-emerald-500"
-                onClick={() => navigate("/semana")}
-              >
-                editar semana
-              </button>
-            }
-          />
-          <WeekOverview semana={semana} todayName={todayName} onSelectDay={handleSelectWeekDay} />
+      <div className="grid items-start gap-4 xl:grid-cols-[1.45fr_0.85fr]">
+        <div className="grid gap-4">
+          <Card>
+            <SectionHeader
+              title="Semana atual"
+              action={
+                <button
+                  type="button"
+                  className="text-xs font-semibold text-emerald-500"
+                  onClick={() => navigate("/semana")}
+                >
+                  editar semana
+                </button>
+              }
+            />
+            <WeekOverview semana={semana} todayName={todayName} onSelectDay={handleSelectWeekDay} />
+          </Card>
 
-          <div className="mt-4 border-t border-[var(--border)] pt-4">
+          <Card>
             <SectionHeader title="Recordes recentes" />
             <PRList prs={prs} />
-          </div>
-        </Card>
+          </Card>
+        </div>
 
         <div className="grid gap-4">
           <Card>

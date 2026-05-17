@@ -78,8 +78,12 @@ function getDominantGroup(exercicios = []) {
   return Object.entries(groups).sort((a, b) => b[1] - a[1])[0]?.[0] || null;
 }
 
+function hasExerciseData(item) {
+  return Boolean(item.exercicio || item.series || item.repeticoes || item.carga_alvo);
+}
+
 function buildExercisesPayload(exercicios) {
-  return exercicios.map((item, index) => {
+  return exercicios.filter(hasExerciseData).map((item, index) => {
     const series = Number(item.series);
     const repeticoes = Number(item.repeticoes);
 
@@ -244,7 +248,36 @@ export default function Semana() {
     setHasUnsavedChanges(true);
   }
 
-  function removeExercise(index) {
+  async function removeExercise(index) {
+    if (form.exercicios.length === 1 && selectedPlan?.id) {
+      if (!window.confirm(`Remover o ultimo exercicio e liberar ${form.dia_semana}?`)) {
+        return;
+      }
+
+      try {
+        setError("");
+        await api.delete(`/semana/${selectedPlan.id}`);
+        const nextForm = mapPlanToForm(null, form.dia_semana);
+        setForm(nextForm);
+        setExpandedExercises({ 0: true });
+        setDraggingIndex(null);
+        setDragOverIndex(null);
+        setExercisePickerIndex(null);
+        setDuplicateTargetDay("");
+        setHasUnsavedChanges(false);
+        showToast({
+          title: "Dia liberado",
+          message: `${form.dia_semana} voltou a ficar sem treino definido.`,
+        });
+        load();
+      } catch (err) {
+        const message = getApiErrorMessage(err, "Nao foi possivel remover o exercicio.");
+        setError(message);
+        showToast({ title: "Erro ao remover exercicio", message, type: "error" });
+      }
+      return;
+    }
+
     setForm((current) => ({
       ...current,
       exercicios:
@@ -265,7 +298,7 @@ export default function Semana() {
   }
 
   function clearDayExercises() {
-    if (!form.exercicios.some((item) => item.exercicio || item.series || item.repeticoes || item.carga_alvo)) {
+    if (!form.exercicios.some(hasExerciseData)) {
       return;
     }
 
@@ -398,6 +431,27 @@ export default function Semana() {
     try {
       setError("");
       const exercicios = buildExercisesPayload(form.exercicios);
+
+      if (!exercicios.length) {
+        if (selectedPlan?.id) {
+          await api.delete(`/semana/${selectedPlan.id}`);
+          const nextForm = mapPlanToForm(null, form.dia_semana);
+          setForm(nextForm);
+          setExpandedExercises({ 0: true });
+          setHasUnsavedChanges(false);
+          setDuplicateTargetDay("");
+          showToast({
+            title: "Dia liberado",
+            message: `${form.dia_semana} voltou a ficar sem treino definido.`,
+          });
+          load();
+          return;
+        }
+
+        setError("Adicione pelo menos um exercicio para salvar este dia.");
+        return;
+      }
+
       await api.post("/semana", {
         dia_semana: form.dia_semana,
         nome_treino: form.nome_treino,

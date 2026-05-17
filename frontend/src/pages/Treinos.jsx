@@ -8,14 +8,13 @@ import EmptyState from "../components/EmptyState.jsx";
 import Input from "../components/Input.jsx";
 import { useToast } from "../context/ToastContext.jsx";
 import api from "../services/api.js";
-import { formatDateBR, getLocalDateString } from "../utils/date.js";
+import { formatDateBR, getLocalDateString, isPlanCompletedForDate } from "../utils/date.js";
 import { getApiErrorMessage } from "../utils/errors.js";
 
 const REST_PRESETS = [60, 90, 120];
 const EXERCISE_REST_PRESETS = [90, 120, 180];
 const MAX_SERIES_PER_EXERCISE = 10;
 const weekDays = ["Domingo", "Segunda", "Terca", "Quarta", "Quinta", "Sexta", "Sabado"];
-const weekLabels = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sab"];
 const WORKOUT_STORAGE_KEY = "fitprogress_workout_draft";
 
 function getSeriesCount(value) {
@@ -280,7 +279,7 @@ export default function Treinos() {
     () => weeklyPlans.find((plan) => normalizeText(plan.dia_semana) === normalizeText(selectedDayName)),
     [selectedDayName, weeklyPlans],
   );
-  const selectedPlanCompleted = selectedPlan?.status === "concluido";
+  const selectedPlanCompleted = isPlanCompletedForDate(selectedPlan, selectedDate);
   const actionLabel =
     selectedDayOffset < 0
       ? "Executar treino atrasado"
@@ -690,40 +689,11 @@ export default function Treinos() {
             />
           )}
 
-          <div className="mb-3 grid grid-cols-7 gap-1.5">
-            {weekDays.map((day, index) => {
-              const plan = weeklyPlans.find((item) => normalizeText(item.dia_semana) === normalizeText(day));
-              const active = normalizeText(day) === normalizeText(selectedDayName);
-              const completed = plan?.status === "concluido";
-
-              return (
-                <button
-                  key={day}
-                  type="button"
-                  onClick={() => setSelectedDayOffset(getWeekdayOffset(day))}
-                  className={`rounded-lg border px-2 py-2 text-center text-[10px] font-semibold transition ${
-                    completed
-                      ? active
-                        ? "border-[var(--success)] bg-[var(--success-soft)] text-[var(--success)] ring-1 ring-[var(--success)]"
-                        : "border-[var(--success)] bg-[var(--success-soft)] text-[var(--success)]"
-                      : active
-                        ? "border-[var(--accent)] bg-emerald-500/10 text-emerald-500"
-                        : plan
-                          ? "border-[var(--border)] bg-[var(--surface-muted)] app-text hover:border-[var(--accent-border)]"
-                          : "border-[var(--border)] app-muted opacity-60"
-                  }`}
-                >
-                  {weekLabels[index]}
-                </button>
-              );
-            })}
-          </div>
-
           <div className="space-y-2">
             {weeklyPlans.map((plan) => {
               const isSelectedDay = normalizeText(plan.dia_semana) === normalizeText(selectedDayName);
               const active = plan.id === selectedPlanId;
-              const completed = plan.status === "concluido";
+              const completed = isPlanCompletedForDate(plan, getDateByOffset(getWeekdayOffset(plan.dia_semana)));
 
               return (
                 <button
