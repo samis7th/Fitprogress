@@ -358,6 +358,11 @@ export default function Dashboard() {
             <SectionHeader title="Recordes recentes" />
             <PRList prs={prs} />
           </Card>
+
+          <Card>
+            <SectionHeader title="Peso - tendencia" />
+            <PesoChart data={pesos} />
+          </Card>
         </div>
 
         <div className="grid gap-4">
@@ -406,55 +411,48 @@ export default function Dashboard() {
               <EmptyState title="Sem treino hoje" description="Defina sua semana para iniciar direto daqui." />
             )}
           </Card>
-        </div>
-      </div>
 
-      <div className="grid gap-4 xl:grid-cols-[1.15fr_0.85fr]">
-        <Card>
-          <SectionHeader title="Peso - tendencia" />
-          <PesoChart data={pesos} />
-        </Card>
-
-        <Card>
-          <SectionHeader
-            title="Dieta de hoje"
-            action={
-              <button
-                type="button"
-                className="text-xs font-semibold text-emerald-500"
-                onClick={() => navigate("/dieta")}
-              >
-                registrar
-              </button>
-            }
-          />
-          <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-1">
-            <div className="rounded-lg bg-[var(--surface-muted)] p-3">
-              <p className="app-muted text-[11px]">Calorias</p>
-              <p className="mt-1 text-xl font-semibold text-[var(--warning)]">
-                {formatNumber(caloriasHoje)} kcal
-              </p>
-            </div>
-            <div className="rounded-lg bg-[var(--surface-muted)] p-3">
-              <p className="app-muted text-[11px]">Proteina</p>
-              <p className="mt-1 text-xl font-semibold text-[var(--success)]">
-                {formatNumber(proteinaHoje)}g
-              </p>
-            </div>
-          </div>
-          <div className="mt-3 space-y-1.5">
-            {dietaHoje.slice(0, 4).map((meal) => (
-              <div key={meal.id} className="flex items-center gap-3 rounded-lg bg-[var(--surface-muted)] px-3 py-2">
-                <span className="badge-soft px-2 py-0.5 text-[10px] font-semibold">{meal.refeicao}</span>
-                <p className="app-text min-w-0 flex-1 truncate text-xs">{meal.descricao || "Refeicao"}</p>
-                <span className="app-muted text-[11px]">{meal.calorias} kcal</span>
+          <Card>
+            <SectionHeader
+              title="Dieta de hoje"
+              action={
+                <button
+                  type="button"
+                  className="text-xs font-semibold text-emerald-500"
+                  onClick={() => navigate("/dieta")}
+                >
+                  registrar
+                </button>
+              }
+            />
+            <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-1">
+              <div className="rounded-lg bg-[var(--surface-muted)] p-3">
+                <p className="app-muted text-[11px]">Calorias</p>
+                <p className="mt-1 text-xl font-semibold text-[var(--warning)]">
+                  {formatNumber(caloriasHoje)} kcal
+                </p>
               </div>
-            ))}
-            {!dietaHoje.length && (
-              <EmptyState title="Sem refeicoes hoje" description="Registre suas refeicoes para acompanhar macros." />
-            )}
-          </div>
-        </Card>
+              <div className="rounded-lg bg-[var(--surface-muted)] p-3">
+                <p className="app-muted text-[11px]">Proteina</p>
+                <p className="mt-1 text-xl font-semibold text-[var(--success)]">
+                  {formatNumber(proteinaHoje)}g
+                </p>
+              </div>
+            </div>
+            <div className="mt-3 space-y-1.5">
+              {dietaHoje.slice(0, 4).map((meal) => (
+                <div key={meal.id} className="flex items-center gap-3 rounded-lg bg-[var(--surface-muted)] px-3 py-2">
+                  <span className="badge-soft px-2 py-0.5 text-[10px] font-semibold">{meal.refeicao}</span>
+                  <p className="app-text min-w-0 flex-1 truncate text-xs">{meal.descricao || "Refeicao"}</p>
+                  <span className="app-muted text-[11px]">{meal.calorias} kcal</span>
+                </div>
+              ))}
+              {!dietaHoje.length && (
+                <EmptyState title="Sem refeicoes hoje" description="Registre suas refeicoes para acompanhar macros." />
+              )}
+            </div>
+          </Card>
+        </div>
       </div>
     </div>
   );

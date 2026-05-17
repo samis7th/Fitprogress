@@ -265,11 +265,12 @@ export default function Semana() {
         setExercisePickerIndex(null);
         setDuplicateTargetDay("");
         setHasUnsavedChanges(false);
+        setPlanejamento((current) => current.filter((item) => item.id !== selectedPlan.id));
         showToast({
           title: "Dia liberado",
           message: `${form.dia_semana} voltou a ficar sem treino definido.`,
         });
-        load();
+        await load();
       } catch (err) {
         const message = getApiErrorMessage(err, "Nao foi possivel remover o exercicio.");
         setError(message);
@@ -297,12 +298,38 @@ export default function Semana() {
     setHasUnsavedChanges(true);
   }
 
-  function clearDayExercises() {
-    if (!form.exercicios.some(hasExerciseData)) {
+  async function clearDayExercises() {
+    if (!form.exercicios.some(hasExerciseData) && !selectedPlan?.id) {
       return;
     }
 
-    if (!window.confirm(`Limpar todos os exercicios de ${form.dia_semana}?`)) {
+    if (!window.confirm(`Limpar todos os exercicios de ${form.dia_semana} e deixar o dia livre?`)) {
+      return;
+    }
+
+    if (selectedPlan?.id) {
+      try {
+        setError("");
+        await api.delete(`/semana/${selectedPlan.id}`);
+        const nextForm = mapPlanToForm(null, form.dia_semana);
+        setForm(nextForm);
+        setExpandedExercises({ 0: true });
+        setDraggingIndex(null);
+        setDragOverIndex(null);
+        setExercisePickerIndex(null);
+        setDuplicateTargetDay("");
+        setHasUnsavedChanges(false);
+        setPlanejamento((current) => current.filter((item) => item.id !== selectedPlan.id));
+        showToast({
+          title: "Dia liberado",
+          message: `${form.dia_semana} voltou a ficar sem treino definido.`,
+        });
+        await load();
+      } catch (err) {
+        const message = getApiErrorMessage(err, "Nao foi possivel limpar os exercicios.");
+        setError(message);
+        showToast({ title: "Erro ao limpar exercicios", message, type: "error" });
+      }
       return;
     }
 
@@ -314,7 +341,7 @@ export default function Semana() {
     setDraggingIndex(null);
     setDragOverIndex(null);
     setExercisePickerIndex(null);
-    setHasUnsavedChanges(true);
+    setHasUnsavedChanges(false);
   }
 
   function reorderExercise(fromIndex, toIndex) {
@@ -440,11 +467,12 @@ export default function Semana() {
           setExpandedExercises({ 0: true });
           setHasUnsavedChanges(false);
           setDuplicateTargetDay("");
+          setPlanejamento((current) => current.filter((item) => item.id !== selectedPlan.id));
           showToast({
             title: "Dia liberado",
             message: `${form.dia_semana} voltou a ficar sem treino definido.`,
           });
-          load();
+          await load();
           return;
         }
 
@@ -478,7 +506,15 @@ export default function Semana() {
       setError("");
       await api.delete(`/semana/${item.id}`);
       showToast({ title: "Treino removido da semana" });
-      load();
+      setPlanejamento((current) => current.filter((plan) => plan.id !== item.id));
+      if (normalizeText(item.dia_semana) === normalizeText(form.dia_semana)) {
+        const nextForm = mapPlanToForm(null, form.dia_semana);
+        setForm(nextForm);
+        setExpandedExercises({ 0: true });
+        setHasUnsavedChanges(false);
+        setDuplicateTargetDay("");
+      }
+      await load();
     } catch (err) {
       const message = getApiErrorMessage(err, "Nao foi possivel remover o treino semanal.");
       setError(message);
