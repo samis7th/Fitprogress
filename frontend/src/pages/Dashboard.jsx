@@ -113,26 +113,82 @@ function WeekOverview({ semana, todayName, onSelectDay }) {
   );
 }
 
-function PRList({ prs }) {
-  if (!prs.length) {
-    return <EmptyState title="Sem PRs ainda" description="Registre treinos para calcular seus recordes." />;
+function isGoalReached(meta, pr) {
+  if (meta.concluida) return true;
+
+  const targetWeight = Number(meta.meta_carga || 0);
+  const targetReps = Number(meta.meta_repeticoes || 0);
+  const currentWeight = Number(pr?.carga || 0);
+  const currentReps = Number(pr?.repeticoes || 0);
+
+  if (targetWeight <= 0 || currentWeight < targetWeight) return false;
+  return !targetReps || currentReps >= targetReps;
+}
+
+function RecentRecords({ metas, prs }) {
+  const prByExercise = useMemo(
+    () =>
+      prs.reduce((acc, pr) => {
+        acc[normalizeText(pr.exercicio)] = pr;
+        return acc;
+      }, {}),
+    [prs],
+  );
+
+  const goalRecords = metas
+    .filter((meta) => isGoalReached(meta, prByExercise[normalizeText(meta.exercicio)]))
+    .map((meta) => ({
+      id: `meta-${meta.id}`,
+      exercicio: meta.exercicio,
+      carga: Number(meta.meta_carga || 0),
+      repeticoes: meta.meta_repeticoes,
+      date: meta.concluida_em || meta.updated_at || meta.created_at || "",
+      badge: meta.concluida ? "Meta" : "Atingida",
+      tone: "success",
+    }))
+    .sort((a, b) => String(b.date || "").localeCompare(String(a.date || "")));
+
+  const usedExercises = new Set(goalRecords.map((record) => normalizeText(record.exercicio)));
+  const prRecords = prs
+    .filter((record) => !usedExercises.has(normalizeText(record.exercicio)))
+    .map((record, index) => ({
+      id: `pr-${record.exercicio}`,
+      exercicio: record.exercicio,
+      carga: Number(record.carga || 0),
+      repeticoes: record.repeticoes,
+      badge: index === 0 ? "PR" : "",
+      tone: "warning",
+    }));
+
+  const records = [...goalRecords, ...prRecords].slice(0, 5);
+
+  if (!records.length) {
+    return <EmptyState title="Sem conquistas ainda" description="Conclua metas ou registre treinos para ver seus destaques." />;
   }
 
   return (
     <div className="space-y-1.5">
-      {prs.slice(0, 5).map((record, index) => (
+      {records.map((record, index) => (
         <div
-          key={record.exercicio}
+          key={record.id}
           className="flex items-center gap-3 rounded-lg bg-[var(--surface-muted)] px-3 py-2"
         >
           <span className="app-muted w-4 text-center text-[11px]">{index + 1}</span>
           <p className="app-text min-w-0 flex-1 truncate text-xs font-medium">{record.exercicio}</p>
-          {index === 0 && (
-            <span className="rounded bg-[var(--warning-soft)] px-1.5 py-0.5 text-[10px] font-bold text-[var(--warning)]">
-              PR
+          {record.badge && (
+            <span
+              className={`rounded px-1.5 py-0.5 text-[10px] font-bold ${
+                record.tone === "success"
+                  ? "bg-[var(--success-soft)] text-[var(--success)]"
+                  : "bg-[var(--warning-soft)] text-[var(--warning)]"
+              }`}
+            >
+              {record.badge}
             </span>
           )}
-          <span className="text-xs font-semibold text-[var(--warning)]">{record.carga}kg</span>
+          <span className={`text-xs font-semibold ${record.tone === "success" ? "text-[var(--success)]" : "text-[var(--warning)]"}`}>
+            {record.carga}kg{record.repeticoes ? ` x ${record.repeticoes}` : ""}
+          </span>
         </div>
       ))}
     </div>
@@ -356,7 +412,7 @@ export default function Dashboard() {
 
           <Card>
             <SectionHeader title="Recordes recentes" />
-            <PRList prs={prs} />
+            <RecentRecords metas={metas} prs={prs} />
           </Card>
 
           <Card>

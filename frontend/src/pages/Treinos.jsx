@@ -160,10 +160,10 @@ export default function Treinos() {
   const [savedProgress, setSavedProgress] = useState(null);
   const [completionSummary, setCompletionSummary] = useState(null);
 
-  function selectPlan(plan) {
+  function selectPlan(plan, dayOffset = selectedDayOffset) {
     setSelectedPlanId(plan.id);
     setSavedProgress(getSavedWorkout(plan.id));
-    setExecution(buildExecutionFromPlan(plan, getLocalDateString(getDateByOffset(selectedDayOffset))));
+    setExecution(buildExecutionFromPlan(plan, getLocalDateString(getDateByOffset(dayOffset))));
     setCurrentIndex(0);
     setRestSeconds(0);
     setRestType("series");
@@ -182,27 +182,10 @@ export default function Treinos() {
       ]);
 
       const plans = weekResponse.data.data || [];
-      const baseDate = new Date();
-      baseDate.setDate(baseDate.getDate() + selectedDayOffset);
-      const selectedDayName = weekDays[baseDate.getDay()];
-      const planToSelect = plans.find((plan) => normalizeText(plan.dia_semana) === normalizeText(selectedDayName));
 
       setWeeklyPlans(plans);
       setSessoes(sessionsResponse.data.data || []);
       setPrs(prsResponse.data.data || []);
-
-      if (planToSelect) {
-        selectPlan(planToSelect);
-      } else {
-        setSelectedPlanId("");
-        setExecution(buildExecutionFromPlan(null, getLocalDateString(getDateByOffset(selectedDayOffset))));
-        setCurrentIndex(0);
-        setRestSeconds(0);
-        setRestType("series");
-        setTimerRunning(false);
-        setWorkoutElapsed(0);
-        setWorkoutStarted(false);
-      }
     } catch (err) {
       setError(getApiErrorMessage(err, "Nao foi possivel carregar os treinos."));
     } finally {
@@ -212,7 +195,30 @@ export default function Treinos() {
 
   useEffect(() => {
     load();
-  }, [selectedDayOffset]);
+  }, []);
+
+  useEffect(() => {
+    if (loading) return;
+
+    const baseDate = getDateByOffset(selectedDayOffset);
+    const nextDayName = weekDays[baseDate.getDay()];
+    const planToSelect = weeklyPlans.find((plan) => normalizeText(plan.dia_semana) === normalizeText(nextDayName));
+
+    if (planToSelect) {
+      selectPlan(planToSelect, selectedDayOffset);
+      return;
+    }
+
+    setSelectedPlanId("");
+    setSavedProgress(null);
+    setExecution(buildExecutionFromPlan(null, getLocalDateString(baseDate)));
+    setCurrentIndex(0);
+    setRestSeconds(0);
+    setRestType("series");
+    setTimerRunning(false);
+    setWorkoutElapsed(0);
+    setWorkoutStarted(false);
+  }, [loading, selectedDayOffset, weeklyPlans]);
 
   useEffect(() => {
     const dayFromNavigation = location.state?.diaSemana;
@@ -236,7 +242,7 @@ export default function Treinos() {
     }, 1000);
 
     return () => window.clearInterval(interval);
-  }, [restSeconds, timerRunning]);
+  }, [timerRunning]);
 
   useEffect(() => {
     if (!workoutStarted) return undefined;
@@ -269,7 +275,7 @@ export default function Treinos() {
         savedAt: new Date().toISOString(),
       }),
     );
-  }, [currentIndex, execution, restSeconds, restType, selectedPlan, timerRunning, workoutElapsed, workoutStarted]);
+  }, [currentIndex, execution, restSeconds, restType, selectedPlan, timerRunning, workoutStarted]);
 
   const selectedDate = useMemo(() => getDateByOffset(selectedDayOffset), [selectedDayOffset]);
   const todayName = weekDays[new Date().getDay()];
@@ -581,23 +587,25 @@ export default function Treinos() {
     }
   }
 
-  const sessoesDoDia = historyDate
-    ? sessoes.filter((sessao) => getSessionDateKey(sessao) === historyDate)
-    : [];
+  const sessoesDoDia = useMemo(
+    () => (historyDate ? sessoes.filter((sessao) => getSessionDateKey(sessao) === historyDate) : []),
+    [historyDate, sessoes],
+  );
 
-  const filteredSessoes = sessoesDoDia.filter((sessao) => {
+  const filteredSessoes = useMemo(() => {
     const term = search.trim().toLowerCase();
-    if (!term) return true;
+    if (!term) return sessoesDoDia;
 
-    return (
-      (sessao.nome_treino || "").toLowerCase().includes(term) ||
-      (sessao.exercicios || []).some((treino) => (treino.exercicio || "").toLowerCase().includes(term))
+    return sessoesDoDia.filter(
+      (sessao) =>
+        (sessao.nome_treino || "").toLowerCase().includes(term) ||
+        (sessao.exercicios || []).some((treino) => (treino.exercicio || "").toLowerCase().includes(term)),
     );
-  });
+  }, [search, sessoesDoDia]);
 
-  const historyExerciseCount = filteredSessoes.reduce(
-    (total, sessao) => total + (sessao.exercicios?.length || 0),
-    0,
+  const historyExerciseCount = useMemo(
+    () => filteredSessoes.reduce((total, sessao) => total + (sessao.exercicios?.length || 0), 0),
+    [filteredSessoes],
   );
 
   function getSessionDuration(sessao) {

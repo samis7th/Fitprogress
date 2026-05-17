@@ -8,6 +8,7 @@ import Input from "../components/Input.jsx";
 import MetaProgress from "../components/MetaProgress.jsx";
 import { useToast } from "../context/ToastContext.jsx";
 import api from "../services/api.js";
+import { formatDateBR } from "../utils/date.js";
 import { getApiErrorMessage } from "../utils/errors.js";
 
 const initialForm = {
@@ -48,6 +49,7 @@ export default function Metas() {
   const [prs, setPrs] = useState([]);
   const [form, setForm] = useState(initialForm);
   const [error, setError] = useState("");
+  const [showPrHistory, setShowPrHistory] = useState(false);
 
   async function load() {
     try {
@@ -102,6 +104,20 @@ export default function Metas() {
           return a.exercicio.localeCompare(b.exercicio, "pt-BR");
         }),
     [metas, prPorExercicio],
+  );
+
+  const historicoPrs = useMemo(
+    () =>
+      prs
+        .slice()
+        .sort((a, b) => {
+          const dataA = String(a.data || "");
+          const dataB = String(b.data || "");
+
+          if (dataA || dataB) return dataB.localeCompare(dataA);
+          return String(a.exercicio || "").localeCompare(String(b.exercicio || ""), "pt-BR");
+        }),
+    [prs],
   );
 
   async function submit(event) {
@@ -264,10 +280,68 @@ export default function Metas() {
               <h2 className="app-text text-lg font-semibold">Metas cadastradas</h2>
               <p className="app-muted mt-1 text-sm">Acompanhamento manual e automatico.</p>
             </div>
-            <span className="badge-soft w-fit px-3 py-1 text-xs font-semibold">
-              {resumo.ativas} em andamento
-            </span>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => setShowPrHistory((current) => !current)}
+              >
+                {showPrHistory ? "Ocultar PRs" : "Historico de PRs"}
+              </Button>
+              <span className="badge-soft w-fit px-3 py-1 text-xs font-semibold">
+                {resumo.ativas} em andamento
+              </span>
+            </div>
           </div>
+
+          {showPrHistory && (
+            <div className="mt-4 rounded-2xl border border-[var(--border)] bg-[var(--surface-muted)] p-4">
+              <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <h3 className="app-text text-sm font-semibold">Historico de PRs batidos</h3>
+                  <p className="app-muted mt-1 text-xs">
+                    Recordes calculados a partir dos treinos registrados.
+                  </p>
+                </div>
+                <span className="badge-soft w-fit px-3 py-1 text-xs font-semibold">
+                  {historicoPrs.length} PR{historicoPrs.length === 1 ? "" : "s"}
+                </span>
+              </div>
+
+              <div className="mt-4 max-h-80 space-y-2 overflow-y-auto pr-1 app-scroll">
+                {historicoPrs.map((pr, index) => (
+                  <div
+                    key={`${pr.exercicio}-${index}`}
+                    className="flex flex-col gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 py-3 sm:flex-row sm:items-center sm:justify-between"
+                  >
+                    <div className="min-w-0">
+                      <p className="app-text truncate text-sm font-semibold">{pr.exercicio}</p>
+                      <p className="app-muted mt-1 text-xs">
+                        {pr.data ? formatDateBR(pr.data) : "Data nao registrada"}
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="rounded-full bg-[var(--warning-soft)] px-3 py-1 text-xs font-semibold text-[var(--warning)]">
+                        {Number(pr.carga || 0).toLocaleString("pt-BR")}kg
+                      </span>
+                      {pr.repeticoes && (
+                        <span className="badge-soft px-3 py-1 text-xs font-semibold">
+                          {pr.repeticoes} reps
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+
+                {!historicoPrs.length && (
+                  <EmptyState
+                    title="Sem PRs registrados"
+                    description="Conclua treinos para gerar recordes automaticamente."
+                  />
+                )}
+              </div>
+            </div>
+          )}
 
           <div className="mt-4 grid gap-3">
             {metasOrdenadas.map((meta) => {
