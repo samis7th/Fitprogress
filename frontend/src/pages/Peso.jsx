@@ -71,6 +71,7 @@ export default function Peso() {
   const [error, setError] = useState("");
   const [period, setPeriod] = useState(30);
   const [weightGoal, setWeightGoal] = useState(getWeightGoal);
+  const [weightGoalDraft, setWeightGoalDraft] = useState(() => getWeightGoal());
   const [showGoalEditor, setShowGoalEditor] = useState(false);
 
   async function load() {
@@ -128,6 +129,7 @@ export default function Peso() {
   function updateWeightGoal(value) {
     setWeightGoal(value);
     localStorage.setItem(WEIGHT_GOAL_KEY, JSON.stringify({ peso: value }));
+    showToast({ title: "Meta salva", message: "Sua meta de peso foi atualizada." });
   }
 
   async function submit(event) {
@@ -179,7 +181,14 @@ export default function Peso() {
               Registre seu peso, acompanhe tendencias e mantenha uma meta visivel.
             </p>
           </div>
-          <Button type="button" variant="secondary" onClick={() => setShowGoalEditor((current) => !current)}>
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => {
+              setWeightGoalDraft(weightGoal);
+              setShowGoalEditor((current) => !current);
+            }}
+          >
             Meta de peso
           </Button>
         </div>
@@ -198,13 +207,24 @@ export default function Peso() {
               label="Peso alvo"
               type="number"
               step="0.1"
-              value={weightGoal}
-              onChange={(event) => updateWeightGoal(event.target.value)}
+              value={weightGoalDraft}
+              onChange={(event) => setWeightGoalDraft(event.target.value)}
               placeholder="Ex: 80"
             />
-            <Button type="button" variant="secondary" onClick={() => setShowGoalEditor(false)}>
-              Fechar
-            </Button>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                type="button"
+                onClick={() => {
+                  updateWeightGoal(weightGoalDraft);
+                  setShowGoalEditor(false);
+                }}
+              >
+                Salvar meta
+              </Button>
+              <Button type="button" variant="secondary" onClick={() => setShowGoalEditor(false)}>
+                Fechar
+              </Button>
+            </div>
           </div>
         </Card>
       )}

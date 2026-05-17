@@ -12,6 +12,8 @@ import { getLocalDateString, isPlanCompletedForDate } from "../utils/date.js";
 
 const weekDays = ["Domingo", "Segunda", "Terca", "Quarta", "Quinta", "Sexta", "Sabado"];
 const weekLabels = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sab"];
+const DIET_GOALS_KEY = "fitprogress_diet_goals";
+const WEIGHT_GOAL_KEY = "fitprogress_weight_goal";
 
 function normalizeText(value = "") {
   return value
@@ -23,6 +25,38 @@ function normalizeText(value = "") {
 function formatNumber(value, fallback = "--") {
   if (value === null || value === undefined || Number.isNaN(Number(value))) return fallback;
   return Number(value).toLocaleString("pt-BR");
+}
+
+function loadDietGoals() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(DIET_GOALS_KEY) || "null");
+    return {
+      calorias: Number(saved?.calorias || 2500),
+      proteina: Number(saved?.proteina || 180),
+    };
+  } catch {
+    return { calorias: 2500, proteina: 180 };
+  }
+}
+
+function loadWeightGoal() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(WEIGHT_GOAL_KEY) || "null");
+    return saved?.peso ? Number(saved.peso) : null;
+  } catch {
+    return null;
+  }
+}
+
+function getProgress(current, target) {
+  const numericTarget = Number(target || 0);
+  if (!numericTarget) return 0;
+  return Math.min((Number(current || 0) / numericTarget) * 100, 100);
+}
+
+function formatWeight(value, fallback = "--") {
+  if (value === null || value === undefined || Number.isNaN(Number(value))) return fallback;
+  return `${Number(value).toLocaleString("pt-BR", { maximumFractionDigits: 1 })}kg`;
 }
 
 function StatCard({ label, value, suffix, detail, color = "var(--accent)" }) {
@@ -45,6 +79,24 @@ function SectionHeader({ title, action }) {
     <div className="mb-3 flex items-center justify-between gap-3">
       <h2 className="app-text text-sm font-semibold">{title}</h2>
       {action}
+    </div>
+  );
+}
+
+function ProgressLine({ label, value, target, tone = "var(--accent)" }) {
+  const progress = getProgress(value, target);
+
+  return (
+    <div>
+      <div className="flex items-center justify-between gap-3">
+        <p className="app-muted text-[11px]">{label}</p>
+        <p className="app-text text-xs font-semibold">
+          {formatNumber(value)} / {formatNumber(target)}
+        </p>
+      </div>
+      <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[var(--soft)]">
+        <div className="h-full rounded-full" style={{ width: `${progress}%`, background: tone }} />
+      </div>
     </div>
   );
 }
@@ -255,6 +307,8 @@ export default function Dashboard() {
   const [resumo, setResumo] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [dietGoals] = useState(loadDietGoals);
+  const [weightGoal] = useState(loadWeightGoal);
 
   useEffect(() => {
     async function load() {
@@ -303,6 +357,24 @@ export default function Dashboard() {
   const proteinaHoje = dietaHoje.reduce((total, item) => total + Number(item.proteina || 0), 0);
   const metasConcluidas = resumo?.metas_concluidas ?? metas.filter((meta) => meta.concluida).length;
   const metasAtivas = resumo?.metas_ativas ?? metas.filter((meta) => !meta.concluida).length;
+  const pesoAtualValor = pesoAtual ? Number(pesoAtual.peso || 0) : null;
+  const pesoMetaDiff = weightGoal && pesoAtualValor ? pesoAtualValor - weightGoal : null;
+  const pesoTrendLabel =
+    pesoVariacao === null || pesoVariacao === undefined
+      ? "Sem comparativo"
+      : Math.abs(Number(pesoVariacao)) < 0.2
+        ? "Estavel"
+        : Number(pesoVariacao) > 0
+          ? "Subindo"
+          : "Descendo";
+  const dailyAlerts = [
+    treinoHoje && !treinoHojeConcluido ? "Treino de hoje ainda pendente." : null,
+    !dietaHoje.length ? "Nenhuma refeicao registrada hoje." : null,
+    dietGoals.proteina > proteinaHoje
+      ? `Faltam ${formatNumber(dietGoals.proteina - proteinaHoje)}g de proteina.`
+      : null,
+    !pesoAtual ? "Nenhum peso registrado ainda." : null,
+  ].filter(Boolean);
 
   function handleSelectWeekDay(plan, day) {
     if (plan?.id) {
@@ -366,12 +438,14 @@ export default function Dashboard() {
           />
           <StatCard
             label="Peso atual"
-            value={pesoAtual ? pesoAtual.peso : "--"}
-            suffix="kg"
+            value={pesoAtual ? formatNumber(pesoAtual.peso) : "--"}
+            suffix={pesoAtual ? "kg" : ""}
             detail={
-              pesoVariacao === null || pesoVariacao === undefined
-                ? "sem comparativo"
-                : `${pesoVariacao > 0 ? "+" : ""}${Number(pesoVariacao).toFixed(1)}kg`
+              weightGoal
+                ? `Meta ${formatWeight(weightGoal)}`
+                : pesoVariacao === null || pesoVariacao === undefined
+                  ? "sem comparativo"
+                  : `${pesoVariacao > 0 ? "+" : ""}${Number(pesoVariacao).toFixed(1)}kg`
             }
             color="var(--success)"
           />
@@ -386,7 +460,7 @@ export default function Dashboard() {
             label="Nutricao hoje"
             value={formatNumber(caloriasHoje)}
             suffix="kcal"
-            detail={`${formatNumber(proteinaHoje)}g de proteina`}
+            detail={`${formatNumber(proteinaHoje)} / ${formatNumber(dietGoals.proteina)}g proteina`}
             color="var(--warning)"
           />
         </div>
@@ -419,9 +493,79 @@ export default function Dashboard() {
             <SectionHeader title="Peso - tendencia" />
             <PesoChart data={pesos} />
           </Card>
+
+          <Card>
+            <SectionHeader
+              title="Evolucao corporal"
+              action={
+                <button
+                  type="button"
+                  className="text-xs font-semibold text-emerald-500"
+                  onClick={() => navigate("/peso")}
+                >
+                  atualizar
+                </button>
+              }
+            />
+            <div className="grid gap-2 sm:grid-cols-3">
+              <div className="rounded-lg bg-[var(--surface-muted)] p-3">
+                <p className="app-muted text-[11px]">Atual</p>
+                <p className="app-text mt-1 text-lg font-semibold">{formatWeight(pesoAtualValor)}</p>
+              </div>
+              <div className="rounded-lg bg-[var(--surface-muted)] p-3">
+                <p className="app-muted text-[11px]">Meta</p>
+                <p className="app-text mt-1 text-lg font-semibold">{formatWeight(weightGoal)}</p>
+              </div>
+              <div className="rounded-lg bg-[var(--surface-muted)] p-3">
+                <p className="app-muted text-[11px]">Tendencia</p>
+                <p className="mt-1 text-lg font-semibold text-emerald-500">{pesoTrendLabel}</p>
+              </div>
+            </div>
+            {pesoMetaDiff !== null && (
+              <p className="app-muted mt-3 text-xs">
+                Diferenca para a meta:{" "}
+                <span className="app-text font-semibold">
+                  {Math.abs(pesoMetaDiff).toLocaleString("pt-BR", { maximumFractionDigits: 1 })}kg
+                </span>
+              </p>
+            )}
+          </Card>
         </div>
 
         <div className="grid gap-4">
+          <Card>
+            <SectionHeader title="Progresso do dia" />
+            <div className="space-y-4">
+              <div className="rounded-lg bg-[var(--surface-muted)] p-3">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="app-muted text-[11px]">Treino</p>
+                  <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                    treinoHojeConcluido
+                      ? "bg-[var(--success-soft)] text-[var(--success)]"
+                      : treinoHoje
+                        ? "bg-[var(--accent-soft)] text-emerald-500"
+                        : "bg-[var(--surface)] app-muted"
+                  }`}
+                  >
+                    {treinoHojeConcluido ? "Concluido" : treinoHoje ? "Pendente" : "Sem treino"}
+                  </span>
+                </div>
+                <p className="app-text mt-1 text-sm font-semibold">
+                  {treinoHoje?.nome_treino || "Dia livre"}
+                </p>
+              </div>
+              <ProgressLine label="Calorias" value={caloriasHoje} target={dietGoals.calorias} tone="var(--warning)" />
+              <ProgressLine label="Proteina" value={proteinaHoje} target={dietGoals.proteina} tone="var(--success)" />
+              {dailyAlerts.length > 0 && (
+                <div className="space-y-1.5 border-t border-[var(--border)] pt-3">
+                  {dailyAlerts.slice(0, 3).map((alert) => (
+                    <p key={alert} className="app-muted text-xs">{alert}</p>
+                  ))}
+                </div>
+              )}
+            </div>
+          </Card>
+
           <Card>
             <SectionHeader
               title="Metas em progresso"
@@ -485,14 +629,20 @@ export default function Dashboard() {
               <div className="rounded-lg bg-[var(--surface-muted)] p-3">
                 <p className="app-muted text-[11px]">Calorias</p>
                 <p className="mt-1 text-xl font-semibold text-[var(--warning)]">
-                  {formatNumber(caloriasHoje)} kcal
+                  {formatNumber(caloriasHoje)} / {formatNumber(dietGoals.calorias)} kcal
                 </p>
+                <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[var(--soft)]">
+                  <div className="h-full rounded-full bg-[var(--warning)]" style={{ width: `${getProgress(caloriasHoje, dietGoals.calorias)}%` }} />
+                </div>
               </div>
               <div className="rounded-lg bg-[var(--surface-muted)] p-3">
                 <p className="app-muted text-[11px]">Proteina</p>
                 <p className="mt-1 text-xl font-semibold text-[var(--success)]">
-                  {formatNumber(proteinaHoje)}g
+                  {formatNumber(proteinaHoje)} / {formatNumber(dietGoals.proteina)}g
                 </p>
+                <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[var(--soft)]">
+                  <div className="h-full rounded-full bg-[var(--success)]" style={{ width: `${getProgress(proteinaHoje, dietGoals.proteina)}%` }} />
+                </div>
               </div>
             </div>
             <div className="mt-3 space-y-1.5">

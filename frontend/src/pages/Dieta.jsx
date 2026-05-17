@@ -238,12 +238,22 @@ export default function Dieta() {
             Visualize apenas o dia selecionado e registre cada refeicao com descricao.
           </p>
         </div>
-        <DatePicker
-          label="Dia"
-          value={selectedDate}
-          onChange={updateSelectedDate}
-          className="w-full sm:w-56"
-        />
+        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-end">
+          <DatePicker
+            label="Dia"
+            value={selectedDate}
+            onChange={updateSelectedDate}
+            className="w-full sm:w-56"
+          />
+          <Button
+            type="button"
+            variant="secondary"
+            className="sm:mb-0"
+            onClick={() => setShowGoalEditor((current) => !current)}
+          >
+            Metas diarias
+          </Button>
+        </div>
       </div>
 
       {error && (
@@ -289,9 +299,6 @@ export default function Dieta() {
               <p className="app-muted text-xs">Refeicoes</p>
               <p className="app-text mt-2 text-2xl font-semibold">{registrosDoDia.length}</p>
             </div>
-            <Button type="button" variant="ghost" onClick={() => setShowGoalEditor((current) => !current)}>
-              Metas
-            </Button>
           </div>
         </Card>
       </div>
