@@ -249,7 +249,7 @@ export default function Semana() {
       ...current,
       exercicios:
         current.exercicios.length === 1
-          ? current.exercicios
+          ? [{ ...emptyExercise }]
           : current.exercicios.filter((_, itemIndex) => itemIndex !== index),
     }));
     setExpandedExercises((current) => {
@@ -261,6 +261,26 @@ export default function Semana() {
       });
       return Object.keys(next).length ? next : { 0: true };
     });
+    setHasUnsavedChanges(true);
+  }
+
+  function clearDayExercises() {
+    if (!form.exercicios.some((item) => item.exercicio || item.series || item.repeticoes || item.carga_alvo)) {
+      return;
+    }
+
+    if (!window.confirm(`Limpar todos os exercicios de ${form.dia_semana}?`)) {
+      return;
+    }
+
+    setForm((current) => ({
+      ...current,
+      exercicios: [{ ...emptyExercise }],
+    }));
+    setExpandedExercises({ 0: true });
+    setDraggingIndex(null);
+    setDragOverIndex(null);
+    setExercisePickerIndex(null);
     setHasUnsavedChanges(true);
   }
 
@@ -500,6 +520,15 @@ export default function Semana() {
           </div>
 
           <form onSubmit={submit} className="mt-5 space-y-4">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <p className="app-muted text-xs">
+                Gerencie os exercicios deste dia antes de salvar o planejamento.
+              </p>
+              <Button type="button" variant="ghost" onClick={clearDayExercises}>
+                Limpar exercicios
+              </Button>
+            </div>
+
             <div>
               <p className="app-label mb-2 text-xs font-semibold">Templates rapidos</p>
               <div className="flex flex-wrap gap-2">
@@ -569,6 +598,9 @@ export default function Semana() {
                             onClick={() => setExerciseExpanded(index, true)}
                           >
                             Editar
+                          </Button>
+                          <Button type="button" variant="ghost" onClick={() => removeExercise(index)}>
+                            Remover
                           </Button>
                         </div>
                       </div>
