@@ -883,15 +883,15 @@ export default function Semana() {
       </div>
 
       {exercisePickerIndex !== null && (
-        <div className="fixed inset-0 z-[80] flex justify-end bg-black/70">
+        <div className="fixed inset-0 z-[80] flex items-start justify-end bg-black/70 p-3 sm:p-5">
           <button
             type="button"
             className="absolute inset-0"
             onClick={() => setExercisePickerIndex(null)}
             aria-label="Fechar seletor"
           />
-          <div className="app-surface-raised app-scroll relative h-full w-full max-w-xl overflow-y-auto border-l border-[var(--border)] p-5 shadow-2xl sm:m-4 sm:h-[calc(100vh-2rem)] sm:rounded-3xl sm:border">
-            <div className="sticky -top-5 z-10 mb-5 flex items-start justify-between gap-3 border-b border-[var(--border)] bg-[var(--surface-raised)] pb-4 pt-1">
+          <div className="app-surface-raised app-scroll relative w-full max-w-xl overflow-hidden rounded-3xl border border-[var(--border)] p-5 shadow-2xl">
+            <div className="mb-4 flex items-start justify-between gap-3 border-b border-[var(--border)] pb-4">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-500">
                   Exercicio {exercisePickerIndex + 1}
@@ -910,6 +910,7 @@ export default function Semana() {
               value={form.exercicios[exercisePickerIndex]?.exercicio}
               selectedExercise={form.exercicios[exercisePickerIndex]?.selectedExercise}
               onSelect={(exercise) => handleExerciseSelect(exercisePickerIndex, exercise)}
+              compact
               onClear={() => {
                 updateExercise(exercisePickerIndex, "selectedExercise", null);
                 updateExercise(exercisePickerIndex, "exercicio", "");

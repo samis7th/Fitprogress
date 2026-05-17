@@ -16,7 +16,13 @@ function getApiErrorMessage(err, fallback) {
   return err.response?.data?.detail || err.message || fallback;
 }
 
-export default function ExerciseSelector({ value, selectedExercise, onSelect, onClear }) {
+export default function ExerciseSelector({
+  value,
+  selectedExercise,
+  onSelect,
+  onClear,
+  compact = false,
+}) {
   const { showToast } = useToast();
   const [exercises, setExercises] = useState([]);
   const [favorites, setFavorites] = useState([]);
@@ -156,17 +162,20 @@ export default function ExerciseSelector({ value, selectedExercise, onSelect, on
 
     setQuery("");
 
-    if (
-      selectedExercise &&
-      normalizeText(selectedExercise.grupo) !== normalizeText(muscleGroup)
-    ) {
+    const selectedGroup = normalizeText(selectedExercise?.grupo);
+    const hasStaleSelection = selectedGroup
+      ? selectedGroup !== normalizeText(muscleGroup)
+      : Boolean(value);
+
+    if (hasStaleSelection) {
       onClear?.();
     }
   }
 
   const canCreate = query.trim().length > 1 && filtered.length === 0;
   const groupOptions = ["", ...MUSCLE_GROUPS];
-  const visibleExercises = expanded ? filtered : filtered.slice(0, 4);
+  const initialVisibleCount = compact ? 6 : 4;
+  const visibleExercises = expanded ? filtered : filtered.slice(0, initialVisibleCount);
   const canExpand = filtered.length > visibleExercises.length;
 
   return (
@@ -182,6 +191,19 @@ export default function ExerciseSelector({ value, selectedExercise, onSelect, on
           value={query}
           onChange={(event) => setQuery(event.target.value)}
         />
+      </div>
+
+      <div className="flex flex-col gap-2 rounded-2xl border border-[var(--border)] bg-[var(--surface-muted)] p-3 sm:flex-row sm:items-center sm:justify-between">
+        <p className="app-muted text-xs">
+          Busque um exercício existente ou crie um novo personalizado.
+        </p>
+        <button
+          type="button"
+          className="rounded-xl border border-[var(--accent-border)] px-3 py-2 text-xs font-semibold text-emerald-500 transition hover:bg-[var(--accent-soft)]"
+          onClick={() => setModalOpen(true)}
+        >
+          Criar exercício
+        </button>
       </div>
 
       <div className="app-scroll flex w-full min-w-0 max-w-full gap-1.5 overflow-x-auto pb-1">
@@ -206,7 +228,11 @@ export default function ExerciseSelector({ value, selectedExercise, onSelect, on
         })}
       </div>
 
-      <div className={`app-scroll w-full min-w-0 max-w-full space-y-1.5 overflow-y-auto rounded-2xl ${expanded ? "max-h-72" : "max-h-64"}`}>
+      <div
+        className={`app-scroll w-full min-w-0 max-w-full space-y-1.5 overflow-y-auto rounded-2xl ${
+          compact ? "max-h-[min(48vh,440px)]" : expanded ? "max-h-72" : "max-h-64"
+        }`}
+      >
         {loading && <p className="app-muted px-3 py-2 text-sm">Carregando exercícios...</p>}
         {!loading && error && (
           <div className="app-surface-muted app-border space-y-3 rounded-xl border p-4">
@@ -241,7 +267,7 @@ export default function ExerciseSelector({ value, selectedExercise, onSelect, on
             Ver mais {filtered.length - visibleExercises.length} exercícios
           </button>
         )}
-        {!loading && !error && expanded && filtered.length > 4 && (
+        {!loading && !error && expanded && filtered.length > initialVisibleCount && (
           <button
             type="button"
             className="app-muted w-full rounded-xl px-3 py-2 text-center text-xs font-semibold transition hover:bg-emerald-500/10 hover:text-emerald-500"
