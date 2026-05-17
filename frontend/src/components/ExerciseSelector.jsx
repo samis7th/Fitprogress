@@ -16,7 +16,7 @@ function getApiErrorMessage(err, fallback) {
   return err.response?.data?.detail || err.message || fallback;
 }
 
-export default function ExerciseSelector({ value, selectedExercise, onSelect }) {
+export default function ExerciseSelector({ value, selectedExercise, onSelect, onClear }) {
   const { showToast } = useToast();
   const [exercises, setExercises] = useState([]);
   const [favorites, setFavorites] = useState([]);
@@ -87,7 +87,7 @@ export default function ExerciseSelector({ value, selectedExercise, onSelect }) 
     const text = normalizeText(query.trim());
 
     return exercises
-      .filter((exercise) => (!group ? true : exercise.grupo === group))
+      .filter((exercise) => (!group ? true : normalizeText(exercise.grupo) === normalizeText(group)))
       .filter((exercise) => (!text ? true : normalizeText(exercise.nome).includes(text)))
       .sort((a, b) => {
         const aFav = favoriteByExerciseId[a.id] ? 1 : 0;
@@ -145,6 +145,25 @@ export default function ExerciseSelector({ value, selectedExercise, onSelect }) 
     onSelect(exercise);
   }
 
+  function handleGroupChange(muscleGroup) {
+    setGroup(muscleGroup);
+    setExpanded(false);
+
+    if (!muscleGroup) {
+      setQuery(value || "");
+      return;
+    }
+
+    setQuery("");
+
+    if (
+      selectedExercise &&
+      normalizeText(selectedExercise.grupo) !== normalizeText(muscleGroup)
+    ) {
+      onClear?.();
+    }
+  }
+
   const canCreate = query.trim().length > 1 && filtered.length === 0;
   const groupOptions = ["", ...MUSCLE_GROUPS];
   const visibleExercises = expanded ? filtered : filtered.slice(0, 4);
@@ -179,7 +198,7 @@ export default function ExerciseSelector({ value, selectedExercise, onSelect }) 
                   ? "border-[var(--accent)] bg-emerald-500/10 text-emerald-500"
                   : "app-border app-muted hover:border-emerald-500/40 hover:text-emerald-500"
               }`}
-              onClick={() => setGroup(muscleGroup)}
+              onClick={() => handleGroupChange(muscleGroup)}
             >
               {label}
             </button>

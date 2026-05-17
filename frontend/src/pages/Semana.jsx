@@ -240,11 +240,14 @@ export default function Semana() {
   }
 
   function addExercise() {
+    const nextIndex = form.exercicios.length;
+
     setForm((current) => ({
       ...current,
       exercicios: [...current.exercicios, { ...emptyExercise }],
     }));
-    setExpandedExercises((current) => ({ ...current, [form.exercicios.length]: true }));
+    setExpandedExercises((current) => ({ ...current, [nextIndex]: true }));
+    setExercisePickerIndex(nextIndex);
     setHasUnsavedChanges(true);
   }
 
@@ -801,7 +804,7 @@ export default function Semana() {
               })}
             </div>
 
-            <div className="grid gap-3 sm:grid-cols-2">
+            <div className="sticky bottom-3 z-30 grid gap-3 rounded-2xl border border-[var(--border)] bg-[var(--surface-raised)]/95 p-2 shadow-2xl backdrop-blur sm:grid-cols-2">
               <Button type="button" variant="secondary" onClick={addExercise}>
                 Adicionar exercicio
               </Button>
@@ -880,15 +883,15 @@ export default function Semana() {
       </div>
 
       {exercisePickerIndex !== null && (
-        <div className="fixed inset-0 z-[80] flex items-start justify-end bg-black/70 p-3 sm:p-6">
+        <div className="fixed inset-0 z-[80] flex justify-end bg-black/70">
           <button
             type="button"
             className="absolute inset-0"
             onClick={() => setExercisePickerIndex(null)}
             aria-label="Fechar seletor"
           />
-          <div className="app-surface-raised app-scroll relative max-h-[calc(100vh-3rem)] w-full max-w-xl overflow-y-auto rounded-3xl border p-5 shadow-2xl">
-            <div className="mb-5 flex items-start justify-between gap-3">
+          <div className="app-surface-raised app-scroll relative h-full w-full max-w-xl overflow-y-auto border-l border-[var(--border)] p-5 shadow-2xl sm:m-4 sm:h-[calc(100vh-2rem)] sm:rounded-3xl sm:border">
+            <div className="sticky -top-5 z-10 mb-5 flex items-start justify-between gap-3 border-b border-[var(--border)] bg-[var(--surface-raised)] pb-4 pt-1">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-500">
                   Exercicio {exercisePickerIndex + 1}
@@ -907,6 +910,12 @@ export default function Semana() {
               value={form.exercicios[exercisePickerIndex]?.exercicio}
               selectedExercise={form.exercicios[exercisePickerIndex]?.selectedExercise}
               onSelect={(exercise) => handleExerciseSelect(exercisePickerIndex, exercise)}
+              onClear={() => {
+                updateExercise(exercisePickerIndex, "selectedExercise", null);
+                updateExercise(exercisePickerIndex, "exercicio", "");
+                updateExercise(exercisePickerIndex, "grupo", "");
+                updateExercise(exercisePickerIndex, "categoria", "");
+              }}
             />
           </div>
         </div>

@@ -51,6 +51,12 @@ export function ThemeProvider({ children }) {
       accent,
       setBackground,
       setAccent,
+      setTheme,
+      resetAppearance: () => {
+        setTheme("dark");
+        setBackground("default");
+        setAccent("violet");
+      },
       toggleTheme: () => setTheme((current) => (current === "dark" ? "light" : "dark")),
     }),
     [accent, background, theme],

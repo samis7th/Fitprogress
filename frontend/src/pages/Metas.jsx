@@ -17,6 +17,7 @@ const initialForm = {
   meta_carga: "",
   meta_repeticoes: "",
 };
+const METAS_PER_PAGE = 3;
 
 function isMetaAutomaticallyReached(meta, atual) {
   const cargaAtual = Number(atual?.carga || 0);
@@ -50,6 +51,8 @@ export default function Metas() {
   const [form, setForm] = useState(initialForm);
   const [error, setError] = useState("");
   const [showPrHistory, setShowPrHistory] = useState(false);
+  const [metaSearch, setMetaSearch] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
 
   async function load() {
     try {
@@ -119,6 +122,28 @@ export default function Metas() {
         }),
     [prs],
   );
+
+  const metasFiltradas = useMemo(() => {
+    const term = metaSearch.trim().toLowerCase();
+    if (!term) return metasOrdenadas;
+
+    return metasOrdenadas.filter((meta) => meta.exercicio.toLowerCase().includes(term));
+  }, [metaSearch, metasOrdenadas]);
+  const totalPages = Math.max(Math.ceil(metasFiltradas.length / METAS_PER_PAGE), 1);
+  const metasPaginadas = useMemo(() => {
+    const start = (currentPage - 1) * METAS_PER_PAGE;
+    return metasFiltradas.slice(start, start + METAS_PER_PAGE);
+  }, [currentPage, metasFiltradas]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [metaSearch]);
+
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [currentPage, totalPages]);
 
   async function submit(event) {
     event.preventDefault();
@@ -241,6 +266,13 @@ export default function Metas() {
                     exercicio: exercise.nome,
                   })
                 }
+                onClear={() =>
+                  setForm({
+                    ...form,
+                    selectedExercise: null,
+                    exercicio: "",
+                  })
+                }
               />
             </div>
 
@@ -294,6 +326,15 @@ export default function Metas() {
             </div>
           </div>
 
+          <div className="mt-4">
+            <Input
+              label="Buscar metas"
+              placeholder="Buscar por exercicio"
+              value={metaSearch}
+              onChange={(event) => setMetaSearch(event.target.value)}
+            />
+          </div>
+
           {showPrHistory && (
             <div className="mt-4 rounded-2xl border border-[var(--border)] bg-[var(--surface-muted)] p-4">
               <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
@@ -344,7 +385,7 @@ export default function Metas() {
           )}
 
           <div className="mt-4 grid gap-3">
-            {metasOrdenadas.map((meta) => {
+            {metasPaginadas.map((meta) => {
               const atual = prPorExercicio[meta.exercicio.toLowerCase()] || { carga: 0 };
               const atingidaAutomaticamente = isMetaAutomaticallyReached(meta, atual);
               const state = getMetaState(meta, atual);
@@ -404,10 +445,41 @@ export default function Metas() {
               );
             })}
 
-            {!metas.length && (
-              <EmptyState title="Sem metas" description="Crie uma meta para acompanhar progresso." />
+            {!metasFiltradas.length && (
+              <EmptyState
+                title={metas.length ? "Nenhuma meta encontrada" : "Sem metas"}
+                description={
+                  metas.length
+                    ? "Tente buscar por outro exercicio."
+                    : "Crie uma meta para acompanhar progresso."
+                }
+              />
             )}
           </div>
+
+          {metasFiltradas.length > METAS_PER_PAGE && (
+            <div className="mt-4 flex flex-col gap-3 border-t border-[var(--border)] pt-4 sm:flex-row sm:items-center sm:justify-between">
+              <p className="app-muted text-xs">
+                Mostrando {metasPaginadas.length} de {metasFiltradas.length} metas
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {Array.from({ length: totalPages }, (_, index) => index + 1).map((page) => (
+                  <button
+                    key={page}
+                    type="button"
+                    onClick={() => setCurrentPage(page)}
+                    className={`grid h-9 w-9 place-items-center rounded-lg border text-sm font-semibold transition ${
+                      currentPage === page
+                        ? "border-[var(--accent)] bg-[var(--accent-soft)] text-emerald-500"
+                        : "border-[var(--border)] app-muted hover:border-[var(--accent-border)] hover:text-emerald-500"
+                    }`}
+                  >
+                    {page}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </Card>
       </div>
     </div>

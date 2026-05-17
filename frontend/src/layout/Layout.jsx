@@ -40,17 +40,47 @@ function PaletteIcon() {
   );
 }
 
+function CheckIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+      <path d="m20 6-11 11-5-5" />
+    </svg>
+  );
+}
+
 function BackgroundOption({ active, color, label, onClick }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`app-border flex items-center gap-3 rounded-lg border p-2 text-left transition hover:border-emerald-500/40 ${
-        active ? "bg-emerald-500/10 ring-1 ring-[var(--accent)]" : "app-surface-muted"
+      className={`group relative min-h-[88px] overflow-hidden rounded-2xl border p-3 text-left transition ${
+        active
+          ? "border-[var(--accent)] bg-[var(--accent-soft)] shadow-[inset_0_0_0_1px_var(--accent-border)]"
+          : "border-[var(--border)] bg-[var(--surface-muted)] hover:border-[var(--accent-border)]"
       }`}
     >
-      <span className="h-8 w-10 rounded-lg border border-white/10" style={{ background: color }} />
-      <span className="app-text text-sm font-medium">{label}</span>
+      <span className="absolute inset-0 opacity-60" style={{ background: color }} />
+      <span className="absolute inset-0 bg-[var(--surface)]/75 backdrop-blur-[1px]" />
+      <span className="relative flex items-start justify-between gap-3">
+        <span>
+          <span className="app-text block text-sm font-semibold">{label}</span>
+          <span className="app-muted mt-1 block text-[11px]">Tema</span>
+        </span>
+        <span
+          className={`grid h-6 w-6 place-items-center rounded-full border transition ${
+            active
+              ? "border-[var(--accent)] bg-[var(--accent)] text-gray-950"
+              : "border-white/10 bg-black/10 text-transparent group-hover:text-[var(--muted)]"
+          }`}
+        >
+          <CheckIcon />
+        </span>
+      </span>
+      <span className="relative mt-4 flex gap-1">
+        <span className="h-2 w-8 rounded-full bg-[var(--accent)]" />
+        <span className="h-2 w-4 rounded-full bg-white/20" />
+        <span className="h-2 w-6 rounded-full bg-white/10" />
+      </span>
     </button>
   );
 }
@@ -60,18 +90,25 @@ function AccentOption({ active, color, label, onClick }) {
     <button
       type="button"
       onClick={onClick}
-      className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition ${
-        active ? "border-[var(--accent)] bg-emerald-500/10 app-text" : "app-border app-muted hover:text-emerald-500"
+      className={`flex items-center justify-between gap-2 rounded-xl border px-3 py-2.5 text-sm font-semibold transition ${
+        active
+          ? "border-[var(--accent)] bg-[var(--accent-soft)] app-text"
+          : "border-[var(--border)] app-muted hover:border-[var(--accent-border)] hover:text-[var(--text)]"
       }`}
     >
-      <span className="h-4 w-4 rounded-full" style={{ backgroundColor: color }} />
-      {label}
+      <span className="flex min-w-0 items-center gap-2">
+        <span className="h-4 w-4 rounded-full shadow-[0_0_18px_currentColor]" style={{ backgroundColor: color, color }} />
+        <span className="truncate">{label}</span>
+      </span>
+      <span className={active ? "text-[var(--accent)]" : "text-transparent"}>
+        <CheckIcon />
+      </span>
     </button>
   );
 }
 
 export default function Layout({ children }) {
-  const { accent, background, setAccent, setBackground, theme, toggleTheme } = useTheme();
+  const { accent, background, resetAppearance, setAccent, setBackground, setTheme, theme } = useTheme();
   const [appearanceOpen, setAppearanceOpen] = useState(false);
   const location = useLocation();
 
@@ -95,7 +132,7 @@ export default function Layout({ children }) {
         </button>
 
         {appearanceOpen && (
-          <div className="app-surface-raised absolute right-0 mt-3 w-[min(22rem,calc(100vw-2rem))] rounded-xl border p-4">
+          <div className="app-surface-raised absolute right-0 mt-3 w-[min(23rem,calc(100vw-2rem))] rounded-2xl border p-4 shadow-2xl">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <p className="app-text text-sm font-semibold">Aparência</p>
@@ -110,15 +147,16 @@ export default function Layout({ children }) {
               </button>
             </div>
 
-            <div className="mt-4 space-y-5">
+            <div className="mt-4 space-y-4">
               <section>
-                <p className="app-muted mb-2 text-xs font-semibold uppercase">Modo</p>
-                <div className="app-surface-muted app-border grid grid-cols-2 rounded-lg border p-1">
+                <div className="app-surface-muted grid grid-cols-2 rounded-2xl border border-[var(--border)] p-1">
                   <button
                     type="button"
-                    onClick={() => theme === "dark" && toggleTheme()}
-                    className={`flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold transition ${
-                      theme === "light" ? "bg-emerald-500 text-gray-950" : "app-muted hover:text-emerald-500"
+                    onClick={() => setTheme("light")}
+                    className={`flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold transition ${
+                      theme === "light"
+                        ? "bg-[var(--accent)] text-gray-950"
+                        : "app-muted hover:text-[var(--text)]"
                     }`}
                   >
                     <SunIcon />
@@ -126,9 +164,11 @@ export default function Layout({ children }) {
                   </button>
                   <button
                     type="button"
-                    onClick={() => theme === "light" && toggleTheme()}
-                    className={`flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold transition ${
-                      theme === "dark" ? "bg-emerald-500 text-gray-950" : "app-muted hover:text-emerald-500"
+                    onClick={() => setTheme("dark")}
+                    className={`flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold transition ${
+                      theme === "dark"
+                        ? "bg-[var(--accent)] text-gray-950"
+                        : "app-muted hover:text-[var(--text)]"
                     }`}
                   >
                     <MoonIcon />
@@ -138,8 +178,8 @@ export default function Layout({ children }) {
               </section>
 
               <section>
-                <p className="app-muted mb-2 text-xs font-semibold uppercase">Fundo</p>
-                <div className="grid gap-2">
+                <p className="app-muted mb-2 text-xs font-semibold uppercase tracking-[0.16em]">Tema</p>
+                <div className="grid grid-cols-2 gap-2">
                   {backgroundOptions.map((option) => (
                     <BackgroundOption
                       key={option.id}
@@ -153,7 +193,7 @@ export default function Layout({ children }) {
               </section>
 
               <section>
-                <p className="app-muted mb-2 text-xs font-semibold uppercase">Cor principal</p>
+                <p className="app-muted mb-2 text-xs font-semibold uppercase tracking-[0.16em]">Destaque</p>
                 <div className="grid grid-cols-2 gap-2">
                   {accentOptions.map((option) => (
                     <AccentOption
@@ -166,6 +206,14 @@ export default function Layout({ children }) {
                   ))}
                 </div>
               </section>
+
+              <button
+                type="button"
+                onClick={resetAppearance}
+                className="app-muted w-full rounded-xl border border-[var(--border)] px-3 py-2 text-xs font-semibold transition hover:border-[var(--accent-border)] hover:text-[var(--text)]"
+              >
+                Restaurar padrão
+              </button>
             </div>
           </div>
         )}
